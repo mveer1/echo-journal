@@ -1,9 +1,12 @@
 // app.js - Mood Journal PWA (vanilla React with no build step)
+
 (function () {
+
   // Alias React & ReactDOM from global scope
   const { useState, useEffect, useCallback } = React;
-
+  
   /**************************** DATA *********************************/
+  
   const moodOptions = [
     { emoji: "😊", name: "Happy", value: "happy" },
     { emoji: "😐", name: "Neutral", value: "neutral" },
@@ -14,34 +17,43 @@
     { emoji: "😰", name: "Stressed", value: "stressed" },
     { emoji: "😍", name: "Excited", value: "excited" },
   ];
-
+  
   const prompts = [
     {
       id: "mood",
       question: "How are you feeling today?",
+      title: "How are you feeling today?",
+      subtitle: "Select the emoji that best represents your current mood",
       type: "mood",
       required: true,
     },
     {
       id: "recent",
       question: "What happened recently that influenced your mood?",
+      title: "What happened recently?",
+      subtitle: "Share something that influenced your mood today",
       type: "text",
-      placeholder: "Share what's on your mind...",
+      placeholder: "Tell me about your day...",
     },
     {
       id: "gratitude",
       question: "What's one thing you're grateful for?",
+      title: "What are you grateful for?",
+      subtitle: "Name one thing you appreciate today",
       type: "text",
-      placeholder: "Even small things count...",
+      placeholder: "I'm grateful for...",
     },
     {
       id: "reflection",
       question: "Do you want to reflect on something?",
+      title: "Want to reflect?",
+      subtitle: "Any additional thoughts or feelings to explore? (Optional)",
       type: "text",
-      placeholder: "Optional thoughts or insights...",
+      placeholder: "Share your thoughts...",
+      optional: true,
     },
   ];
-
+  
   const sampleEntries = [
     {
       id: "1",
@@ -49,23 +61,18 @@
       mood: "😊",
       moodName: "Happy",
       responses: {
-        recent:
-          "Had a great meeting with my team today and we made significant progress on our project.",
-        gratitude:
-          "I'm grateful for my supportive colleagues and the opportunity to work on meaningful projects.",
-        reflection:
-          "I notice I feel most energized when I'm collaborating with others and solving complex problems.",
+        recent: "Had a great meeting with my team today and we made significant progress on our project.",
+        gratitude: "I'm grateful for my supportive colleagues and the opportunity to work on meaningful projects.",
+        reflection: "I notice I feel most energized when I'm collaborating with others and solving complex problems.",
       },
       aiInsights: {
-        summary:
-          "Your entry shows high energy and satisfaction from teamwork and problem-solving.",
+        summary: "Your entry shows high energy and satisfaction from teamwork and problem-solving.",
         mood: "Positive and collaborative",
         suggestions: [
           "Consider scheduling regular collaboration sessions",
           "Reflect on what specific aspects of problem-solving energize you most",
         ],
-        affirmation:
-          "You thrive in collaborative environments and your contributions make a real difference.",
+        affirmation: "You thrive in collaborative environments and your contributions make a real difference.",
       },
     },
     {
@@ -79,15 +86,13 @@
         reflection: "Sometimes I wish I had more variety in my daily routine.",
       },
       aiInsights: {
-        summary:
-          "A balanced day with appreciation for stability while seeking more variety.",
+        summary: "A balanced day with appreciation for stability while seeking more variety.",
         mood: "Content but seeking stimulation",
         suggestions: [
           "Try adding one small new activity to your routine",
           "Consider what kind of variety would bring you joy",
         ],
-        affirmation:
-          "Stability is valuable, and it's natural to desire growth and new experiences.",
+        affirmation: "Stability is valuable, and it's natural to desire growth and new experiences.",
       },
     },
     {
@@ -96,52 +101,90 @@
       mood: "😢",
       moodName: "Sad",
       responses: {
-        recent:
-          "Received some disappointing news about a project I was really looking forward to.",
+        recent: "Received some disappointing news about a project I was really looking forward to.",
         gratitude: "I'm grateful for the support of my friends during tough times.",
         reflection: "Disappointment is hard, but I know I'll bounce back stronger.",
       },
       aiInsights: {
-        summary:
-          "You're processing disappointment while maintaining perspective and gratitude.",
+        summary: "You're processing disappointment while maintaining perspective and gratitude.",
         mood: "Resilient despite setbacks",
         suggestions: [
           "Allow yourself to feel disappointed - it's a natural response",
           "Focus on the lessons learned and new opportunities ahead",
         ],
-        affirmation:
-          "Your resilience and positive outlook will help you navigate through this challenge.",
+        affirmation: "Your resilience and positive outlook will help you navigate through this challenge.",
       },
     },
   ];
-
+  
   /**************************** UTILITIES *********************************/
+  
   function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
   }
-
+  
   function getTodayISO() {
     return new Date().toISOString().split("T")[0];
   }
-
+  
   function formatDate(dateStr) {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   }
-
+  
   /**************************** COMPONENTS *********************************/
+  
+  // Theme Toggle Component - NEW
+  function ThemeToggle() {
+    const [isDark, setIsDark] = useState(() => {
+      const saved = localStorage.getItem('theme');
+      return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    });
+  
+    useEffect(() => {
+      document.body.classList.toggle('dark', isDark);
+      document.documentElement.setAttribute('data-color-scheme', isDark ? 'dark' : 'light');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }, [isDark]);
+  
+    return React.createElement(
+      "button",
+      {
+        className: "theme-toggle",
+        onClick: () => setIsDark(!isDark),
+        "aria-label": "Toggle dark mode"
+      },
+      isDark ? '🌞' : '🌙'
+    );
+  }
+  
+  // Progress Bar Component - NEW
+  function ProgressBar({ current, total }) {
+    const percentage = (current / total) * 100;
+    
+    return React.createElement(
+      "div",
+      { className: "progress-bar" },
+      React.createElement("div", {
+        className: "progress-fill",
+        style: { width: `${percentage}%` }
+      })
+    );
+  }
+  
+  // Bottom Navigation
   function BottomNav({ current, onNavigate }) {
     const navItems = [
       { id: "journal", icon: "📓", label: "Journal" },
       { id: "history", icon: "📅", label: "History" },
       { id: "settings", icon: "⚙️", label: "Settings" },
     ];
-
+  
     return React.createElement(
       "nav",
       { className: "bottom-nav" },
@@ -160,7 +203,7 @@
       )
     );
   }
-
+  
   // Welcome screen
   function Welcome({ onStart, onHistory }) {
     return React.createElement(
@@ -199,93 +242,152 @@
       )
     );
   }
-
-  // Flashcard component
-  function Flashcard({ prompt, value, onChange }) {
+  
+  // Updated Flashcard component with glass morphism and proper centering
+  function Flashcard({ prompt, value, onChange, onNext, onSkip, canSkip = false, isLast = false }) {
     const commonProps = {
       required: prompt.required,
       id: prompt.id,
     };
-
+  
     let content = null;
-
+  
     if (prompt.type === "mood") {
       content = React.createElement(
         "div",
-        { className: "mood-selector" },
+        { className: "mood-grid" }, // ✅ Updated class name
         moodOptions.map((m) =>
           React.createElement(
-            "div",
+            "button", // ✅ Changed from div to button for better accessibility
             {
               key: m.value,
-              className: `mood-option ${value === m.value ? "selected" : ""}`,
+              className: `mood-emoji ${value === m.value ? "selected" : ""}`, // ✅ Updated class names
               onClick: () => onChange(m.value),
-              role: "button",
               "aria-label": m.name,
               tabIndex: 0,
               onKeyDown: (e) => {
-                if (e.key === "Enter" || e.key === " ") onChange(m.value);
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onChange(m.value);
+                }
               },
             },
-            React.createElement("div", { className: "mood-emoji" }, m.emoji),
-            React.createElement("div", { className: "mood-name" }, m.name)
+            m.emoji // ✅ Simplified to show only emoji (matches design)
           )
         )
       );
     } else {
-      content = React.createElement(
-        "div",
-        { className: "journal-input" },
-        React.createElement("textarea", {
-          className: "journal-textarea form-control",
-          placeholder: prompt.placeholder || "",
-          value: value || "",
-          onChange: (e) => onChange(e.target.value),
-        })
-      );
+      content = React.createElement("textarea", {
+        className: "text-input", // ✅ Updated class name to match CSS
+        placeholder: prompt.placeholder || "",
+        value: value || "",
+        onChange: (e) => onChange(e.target.value),
+        rows: 3,
+        ...commonProps
+      });
     }
-
+  
     return React.createElement(
       "div",
-      { className: "flashcard" },
+      { className: "fullscreen-center" }, // ✅ Added proper centering wrapper
       React.createElement(
         "div",
-        { className: "question-text" },
-        prompt.question
-      ),
-      content
+        { className: "card-container glass-card fade-in" }, // ✅ Updated with glass morphism classes
+        React.createElement(
+          "div",
+          null,
+          React.createElement(
+            "h2",
+            { className: "card-title" }, // ✅ Updated class name
+            prompt.title || prompt.question
+          ),
+          prompt.subtitle && React.createElement(
+            "p",
+            { className: "card-subtitle" }, // ✅ Added subtitle support
+            prompt.subtitle
+          ),
+          content
+        ),
+        
+        // ✅ Added skip button section
+        React.createElement(
+          "div",
+          { 
+            style: { 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginTop: '1rem' 
+            } 
+          },
+          canSkip && React.createElement(
+            "button",
+            { 
+              className: "skip-button",
+              onClick: onSkip
+            },
+            "Skip"
+          ),
+          React.createElement("div", { style: { flex: 1 } })
+        ),
+        
+        // ✅ Added swipe hint
+        React.createElement(
+          "div",
+          { className: "swipe-hint" },
+          "Swipe left to continue →"
+        )
+      )
     );
   }
-
-  // Survey component
+  
+  // Bottom Action Bar Component - NEW
+  function BottomActionBar({ onNext, disabled, isLast }) {
+    return React.createElement(
+      "div",
+      { className: "bottom-action-bar" },
+      React.createElement(
+        "button",
+        {
+          className: "glass-button",
+          onClick: onNext,
+          disabled: disabled,
+          style: { opacity: disabled ? 0.5 : 1 }
+        },
+        isLast ? 'Complete' : 'Next'
+      )
+    );
+  }
+  
+  // Updated Survey component with new components
   function JournalSurvey({ onSubmit, onCancel }) {
     const [step, setStep] = useState(0);
     const [responses, setResponses] = useState({});
-
+  
     const currentPrompt = prompts[step];
     const totalSteps = prompts.length;
-
+    const isLastStep = step === totalSteps - 1;
+  
     const handleChange = (value) => {
       setResponses((prev) => ({ ...prev, [currentPrompt.id]: value }));
     };
-
+  
     const canProceed = () => {
       if (currentPrompt.required) {
         return Boolean(responses[currentPrompt.id]);
       }
       return true;
     };
-
-    const next = () => {
-      if (step < totalSteps - 1) {
-        setStep(step + 1);
-      } else {
+  
+    const handleNext = () => {
+      if (isLastStep) {
         // Prepare entry
         const moodValue = responses.mood || "neutral";
         const moodObj = moodOptions.find((m) => m.value === moodValue) || {
           emoji: "😐",
           name: "Neutral",
         };
+  
         const newEntry = {
           id: generateId(),
           date: getTodayISO(),
@@ -298,10 +400,20 @@
           },
           aiInsights: null, // to be filled later when AI enabled
         };
+  
         onSubmit(newEntry);
+      } else {
+        setStep(step + 1);
       }
     };
-
+  
+    const handleSkip = () => {
+      if (currentPrompt.optional) {
+        setResponses(prev => ({ ...prev, [currentPrompt.id]: '' }));
+        handleNext();
+      }
+    };
+  
     const prev = () => {
       if (step === 0) {
         onCancel();
@@ -309,51 +421,37 @@
         setStep(step - 1);
       }
     };
-
+  
     return React.createElement(
       "div",
       { className: "survey-container" },
-      React.createElement("div", { className: "progress-bar" },
-        React.createElement("div", {
-          className: "progress-fill",
-          style: { width: `${((step + 1) / totalSteps) * 100}%` },
-        })
-      ),
+      React.createElement(ProgressBar, {
+        current: step + 1,
+        total: totalSteps
+      }),
       React.createElement(Flashcard, {
         key: currentPrompt.id,
         prompt: currentPrompt,
         value: responses[currentPrompt.id] || "",
         onChange: handleChange,
+        onNext: handleNext,
+        onSkip: handleSkip,
+        canSkip: currentPrompt.optional,
+        isLast: isLastStep
       }),
-      React.createElement(
-        "div",
-        { className: "survey-nav" },
-        React.createElement(
-          "button",
-          {
-            className: "nav-button nav-button--secondary",
-            onClick: prev,
-          },
-          step === 0 ? "Cancel" : "Back"
-        ),
-        React.createElement(
-          "button",
-          {
-            className: "nav-button nav-button--primary",
-            onClick: next,
-            disabled: !canProceed(),
-          },
-          step === totalSteps - 1 ? "Finish" : "Next"
-        )
-      )
+      React.createElement(BottomActionBar, {
+        onNext: handleNext,
+        disabled: !canProceed(),
+        isLast: isLastStep
+      })
     );
   }
-
+  
   // AI Insights simulated component
   function AIInsights({ entry, onDone }) {
     const [loading, setLoading] = useState(true);
     const [insights, setInsights] = useState(null);
-
+  
     useEffect(() => {
       // Simulate asynchronous AI processing
       const timer = setTimeout(() => {
@@ -366,18 +464,20 @@
           ],
           affirmation: "You are capable of handling everything that comes your way.",
         };
+  
         setInsights(simulatedInsights);
         setLoading(false);
       }, 1500);
+  
       return () => clearTimeout(timer);
     }, [entry]);
-
+  
     const handleDone = () => {
       // Pass the entry with insights back to parent
       const entryWithInsights = { ...entry, aiInsights: insights };
       onDone(entryWithInsights);
     };
-
+  
     if (loading) {
       return React.createElement(
         "div",
@@ -394,7 +494,7 @@
         )
       );
     }
-
+  
     return React.createElement(
       "div",
       { className: "page" },
@@ -433,7 +533,7 @@
       )
     );
   }
-
+  
   function InsightCard({ title, icon, content, suggestions }) {
     return React.createElement(
       "div",
@@ -459,7 +559,7 @@
         )
     );
   }
-
+  
   // History list view
   function HistoryList({ entries, onEntryClick }) {
     if (entries.length === 0) {
@@ -474,7 +574,7 @@
         )
       );
     }
-
+  
     return React.createElement(
       "div",
       { className: "history-entries" },
@@ -518,7 +618,7 @@
       )
     );
   }
-
+  
   // Entry detail view
   function EntryDetail({ entry, onBack }) {
     return React.createElement(
@@ -593,14 +693,13 @@
         )
     );
   }
-
+  
   // Settings component
   function Settings({ prefs, onToggle }) {
     return React.createElement(
       "div",
       { className: "page" },
       React.createElement("h2", { className: "page-title" }, "Settings"),
-
       React.createElement("div", { className: "settings-section" },
         React.createElement("h3", { className: "settings-title" }, "Preferences"),
         React.createElement(SettingToggle, {
@@ -616,7 +715,6 @@
           onToggle: () => onToggle("notify"),
         })
       ),
-
       React.createElement("div", { className: "settings-section" },
         React.createElement("h3", { className: "settings-title" }, "About"),
         React.createElement(
@@ -627,7 +725,7 @@
       )
     );
   }
-
+  
   function SettingToggle({ label, description, enabled, onToggle }) {
     return React.createElement(
       "div",
@@ -658,14 +756,15 @@
       )
     );
   }
-
+  
   /**************************** MAIN APP *********************************/
+  
   function App() {
     const [view, setView] = useState("welcome");
     const [entries, setEntries] = useState(sampleEntries);
     const [prefs, setPrefs] = useState({ ai: true, notify: true });
     const [selectedEntry, setSelectedEntry] = useState(null);
-
+  
     // Register service worker for PWA (dynamic)
     useEffect(() => {
       if ("serviceWorker" in navigator) {
@@ -673,11 +772,9 @@
           self.addEventListener('install', (e) => {
             self.skipWaiting();
           });
-          
           self.addEventListener('activate', (e) => {
             self.clients.claim();
           });
-          
           self.addEventListener('fetch', (e) => {
             // Basic caching strategy
             e.respondWith(
@@ -687,14 +784,16 @@
             );
           });
         `;
+  
         const blob = new Blob([swCode], { type: "application/javascript" });
         const swUrl = URL.createObjectURL(blob);
+  
         navigator.serviceWorker.register(swUrl).catch(() => {});
       }
     }, []);
-
+  
     const startJournal = () => setView("journal");
-
+  
     const handleSurveySubmit = (entry) => {
       if (prefs.ai) {
         setSelectedEntry(entry);
@@ -704,29 +803,29 @@
         setView("history");
       }
     };
-
+  
     const handleAIComplete = (entryWithInsights) => {
       setEntries((prev) => [entryWithInsights, ...prev]);
       setSelectedEntry(null);
       setView("history");
     };
-
+  
     const togglePref = (key) => {
       setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
     };
-
+  
     const onNavigate = (id) => {
       setSelectedEntry(null);
       setView(id);
     };
-
+  
     const onEntryClick = (entry) => {
       setSelectedEntry(entry);
       setView("entry-detail");
     };
-
+  
     let pageContent = null;
-
+  
     switch (view) {
       case "welcome":
         pageContent = React.createElement(Welcome, {
@@ -734,18 +833,21 @@
           onHistory: () => setView("history"),
         });
         break;
+  
       case "journal":
         pageContent = React.createElement(JournalSurvey, {
           onSubmit: handleSurveySubmit,
           onCancel: () => setView("welcome"),
         });
         break;
+  
       case "ai":
         pageContent = React.createElement(AIInsights, {
           entry: selectedEntry,
           onDone: handleAIComplete,
         });
         break;
+  
       case "history":
         pageContent = React.createElement(
           "div",
@@ -757,47 +859,52 @@
           })
         );
         break;
+  
       case "entry-detail":
         pageContent = React.createElement(EntryDetail, {
           entry: selectedEntry,
           onBack: () => setView("history"),
         });
         break;
+  
       case "settings":
         pageContent = React.createElement(Settings, {
           prefs,
           onToggle: togglePref,
         });
         break;
+  
       default:
         pageContent = React.createElement(Welcome, {
           onStart: startJournal,
           onHistory: () => setView("history"),
         });
     }
-
+  
     return React.createElement(
       "div",
       { className: "app" },
+      React.createElement(ThemeToggle), // ✅ Added theme toggle
       pageContent,
       view !== "welcome" && view !== "journal" && view !== "ai" &&
         React.createElement(BottomNav, { current: view, onNavigate })
     );
   }
-
+  
   /**************************** RENDER *********************************/
+  
   // Load React from CDN
   if (typeof React === 'undefined') {
     const script1 = document.createElement('script');
     script1.src = 'https://unpkg.com/react@18/umd/react.development.js';
     script1.crossOrigin = 'anonymous';
     document.head.appendChild(script1);
-    
+  
     const script2 = document.createElement('script');
     script2.src = 'https://unpkg.com/react-dom@18/umd/react-dom.development.js';
     script2.crossOrigin = 'anonymous';
     document.head.appendChild(script2);
-    
+  
     script2.onload = () => {
       const root = ReactDOM.createRoot(document.getElementById("app"));
       root.render(React.createElement(App));
@@ -808,4 +915,6 @@
       root.render(React.createElement(App));
     });
   }
-})();
+  
+  })();
+  
