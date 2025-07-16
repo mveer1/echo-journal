@@ -832,6 +832,16 @@
     };
 
     /* -------------------- JOURNAL HANDLERS -------------------- */
+    const printCurrentUser = () => {
+      if (currentUser) {
+        console.log(`Current User: ${currentUser.displayName || 'Anonymous'}`);
+        console.log(`User ID: ${currentUser.uid}`);
+      } else {
+        console.log('No user is currently logged in.');
+      }
+    };
+
+    printCurrentUser();
     const startJournal = () => setView('journal');
 
     const handleSurveySubmit = async entry => {

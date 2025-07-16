@@ -495,19 +495,58 @@ async saveEntry(userId, entry) {
             }
         }
 
-        // Update AI insights for an entry
-        async updateEntryInsights(entryId, insights) {
+        // Update entry with AI insights
+        async updateEntryInsights(userId, entryId, insights) {
             try {
-                await this.db.collection(this.entriesCollection).doc(entryId).update({
-                    aiInsights: insights,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                if (!this.initialized) {
+                    await this.initializeFirebase();
+                }
+
+                if (!userId || !entryId) {
+                    console.error('Missing user ID or entry ID for insights update');
+                    console.log('UserId:', userId, 'EntryId:', entryId); // Debug log
+                    return { success: false, error: 'Missing required parameters' };
+                }
+
+                // FIXED: Correct Firebase v9 syntax for doc reference
+                const entryRef = global.firebaseFirestore.doc(this.db, 'journal_entries', entryId);
+                
+                // Alternative syntax (if above doesn't work):
+                // const entryRef = global.firebaseFirestore.doc(this.db, `journal_entries/${entryId}`);
+
+                const entryDoc = await global.firebaseFirestore.getDoc(entryRef);
+                
+                if (!entryDoc.exists()) {
+                    console.error('Entry not found');
+                    return { success: false, error: 'Entry not found' };
+                }
+
+                if (entryDoc.data().userId !== userId) {
+                    console.error('User not authorized to update this entry');
+                    return { success: false, error: 'Unauthorized' };
+                }
+
+                // Prepare update data
+                const updateData = {
+                    aiInsights: insights || null,
+                    updatedAt: global.firebaseFirestore.serverTimestamp()
+                };
+
+                // Update entry in Firestore
+                await global.firebaseFirestore.updateDoc(entryRef, updateData);
+
+                console.log('Entry insights updated successfully');
                 return { success: true };
             } catch (error) {
                 console.error('Error updating entry insights:', error);
-                return { success: false, error: error.message };
+                return { 
+                    success: false, 
+                    error: error.message 
+                };
             }
         }
+
+
     }
 
     // Export to global scope
