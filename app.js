@@ -760,11 +760,20 @@
   /**************************** MAIN APP *********************************/
   
   function App() {
+    const [authService] = useState(() => {
+      const storageService = new SecureStorageService();
+      return new AuthService(storageService);
+    });
+    const [currentUser, setCurrentUser] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [view, setView] = useState("welcome");
-    const [entries, setEntries] = useState(sampleEntries);
+    const [entries, setEntries] = useState([]);
     const [prefs, setPrefs] = useState({ ai: true, notify: true });
     const [selectedEntry, setSelectedEntry] = useState(null);
   
+    // Add at the top of your App function
+
     // Register service worker for PWA (dynamic)
     useEffect(() => {
       if ("serviceWorker" in navigator) {
@@ -792,23 +801,79 @@
       }
     }, []);
   
+    // Check for existing session on app load
+    useEffect(() => {
+      const checkAuth = async () => {
+          // Check if user was previously logged in
+          const savedUser = localStorage.getItem('mood_journal_session');
+          if (savedUser) {
+              try {
+                  const user = JSON.parse(savedUser);
+                  setCurrentUser(user);
+                  setIsAuthenticated(true);
+                  // Load user's entries
+                  const userEntries = await authService.storageService.getUserEntries(user.id);
+                  setEntries(userEntries);
+              } catch (error) {
+                  console.error('Session restore failed:', error);
+                  localStorage.removeItem('mood_journal_session');
+              }
+          }
+          setLoading(false);
+      };
+      checkAuth();
+    }, [authService]);
+  
+    const handleAuthSuccess = async (user) => {
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+      
+      // Save session
+      localStorage.setItem('mood_journal_session', JSON.stringify(user));
+      
+      // Load user's entries
+      const userEntries = await authService.storageService.getUserEntries(user.id);
+      setEntries(userEntries);
+      
+      setView('welcome');
+    };
+    
+    const handleLogout = () => {
+        authService.logout();
+        setCurrentUser(null);
+        setIsAuthenticated(false);
+        setEntries([]);
+        localStorage.removeItem('mood_journal_session');
+        setView('auth');
+    };  
+
     const startJournal = () => setView("journal");
   
-    const handleSurveySubmit = (entry) => {
-      if (prefs.ai) {
-        setSelectedEntry(entry);
-        setView("ai");
-      } else {
-        setEntries((prev) => [entry, ...prev]);
-        setView("history");
-      }
+    const handleSurveySubmit = async (entry) => {
+        const newEntries = [entry, ...entries];
+        setEntries(newEntries);
+        
+        // Save to encrypted storage
+        await authService.storageService.saveUserEntries(currentUser.id, newEntries);
+        
+        if (prefs.ai) {
+            setSelectedEntry(entry);
+            setView("ai");
+        } else {
+            setView("history");
+        }
     };
   
-    const handleAIComplete = (entryWithInsights) => {
-      setEntries((prev) => [entryWithInsights, ...prev]);
+    const handleAIComplete = async (entryWithInsights) => {
+      const newEntries = [entryWithInsights, ...entries];
+      setEntries(newEntries);
+      
+      // Save to encrypted storage
+      await authService.storageService.saveUserEntries(currentUser.id, newEntries);
+      
       setSelectedEntry(null);
       setView("history");
-    };
+  };
   
     const togglePref = (key) => {
       setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -824,6 +889,26 @@
       setView("entry-detail");
     };
   
+    if (loading) {
+      return React.createElement(
+          "div",
+          { className: "app" },
+          React.createElement("div", { className: "loading" }, "Loading...")
+      );
+  }
+
+    if (!isAuthenticated) {
+        return React.createElement(
+            "div",
+            { className: "app" },
+            React.createElement(AuthContainer, {
+                authService: authService,
+                onAuthSuccess: handleAuthSuccess
+            })
+        );
+    }
+
+
     let pageContent = null;
   
     switch (view) {
@@ -884,7 +969,7 @@
     return React.createElement(
       "div",
       { className: "app" },
-      React.createElement(ThemeToggle), // ✅ Added theme toggle
+      React.createElement(ThemeToggle),
       pageContent,
       view !== "welcome" && view !== "journal" && view !== "ai" &&
         React.createElement(BottomNav, { current: view, onNavigate })
