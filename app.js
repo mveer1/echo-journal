@@ -758,222 +758,165 @@
   }
   
   /**************************** MAIN APP *********************************/
-  
   function App() {
-    const [authService] = useState(() => {
-      const storageService = new SecureStorageService();
-      return new AuthService(storageService);
-    });
+    /* ------------------------- SERVICES ------------------------- */
+    // Firebase services (already initialized by firebase-init.js)
+    const [authService] = useState(() => new FirebaseAuthService());
+    const [storageService] = useState(() => new FirebaseStorageService());
+
+    /* ------------------------- STATE ------------------------- */
     const [currentUser, setCurrentUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [view, setView] = useState("welcome");
+
+    const [view, setView] = useState('welcome');
     const [entries, setEntries] = useState([]);
     const [prefs, setPrefs] = useState({ ai: true, notify: true });
     const [selectedEntry, setSelectedEntry] = useState(null);
-  
-    // Add at the top of your App function
 
-    // Register service worker for PWA (dynamic)
+    /* -------------------- SERVICE WORKER (unchanged) ------------------- */
     useEffect(() => {
-      if ("serviceWorker" in navigator) {
+      if ('serviceWorker' in navigator) {
         const swCode = `
-          self.addEventListener('install', (e) => {
-            self.skipWaiting();
-          });
-          self.addEventListener('activate', (e) => {
-            self.clients.claim();
-          });
-          self.addEventListener('fetch', (e) => {
-            // Basic caching strategy
+          self.addEventListener('install', e => self.skipWaiting());
+          self.addEventListener('activate', e => self.clients.claim());
+          self.addEventListener('fetch', e => {
             e.respondWith(
-              caches.match(e.request).then((response) => {
-                return response || fetch(e.request);
-              })
+              caches.match(e.request).then(r => r || fetch(e.request))
             );
           });
         `;
-  
-        const blob = new Blob([swCode], { type: "application/javascript" });
+        const blob = new Blob([swCode], { type: 'application/javascript' });
         const swUrl = URL.createObjectURL(blob);
-  
         navigator.serviceWorker.register(swUrl).catch(() => {});
       }
     }, []);
-  
-    // Check for existing session on app load
+
+    /* -------------- AUTH OBSERVER + INITIAL DATA LOAD -------------- */
     useEffect(() => {
-      const checkAuth = async () => {
-          // Check if user was previously logged in
-          const savedUser = localStorage.getItem('mood_journal_session');
-          if (savedUser) {
-              try {
-                  const user = JSON.parse(savedUser);
-                  setCurrentUser(user);
-                  setIsAuthenticated(true);
-                  // Load user's entries
-                  const userEntries = await authService.storageService.getUserEntries(user.id);
-                  setEntries(userEntries);
-              } catch (error) {
-                  console.error('Session restore failed:', error);
-                  localStorage.removeItem('mood_journal_session');
-              }
-          }
-          setLoading(false);
-      };
-      checkAuth();
-    }, [authService]);
-  
-    const handleAuthSuccess = async (user) => {
+      // Subscribe to Firebase auth changes
+      const unsub = authService.onAuthStateChanged(async user => {
+        if (user) {
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+          // Load user prefs & entries
+          const userPrefs = await authService.getUserPreferences(user.uid);
+          setPrefs(userPrefs);
+          const userEntries = await storageService.getUserEntries(user.uid);
+          setEntries(userEntries);
+        } else {
+          setCurrentUser(null);
+          setIsAuthenticated(false);
+          setEntries([]);
+        }
+        setLoading(false);
+      });
+      return () => unsub && unsub();
+    }, [authService, storageService]);
+
+    /* -------------------- AUTH HANDLERS -------------------- */
+    const handleAuthSuccess = async user => {
       setCurrentUser(user);
       setIsAuthenticated(true);
-      
-      // Save session
-      localStorage.setItem('mood_journal_session', JSON.stringify(user));
-      
-      // Load user's entries
-      const userEntries = await authService.storageService.getUserEntries(user.id);
+      const userEntries = await storageService.getUserEntries(user.id);
       setEntries(userEntries);
-      
       setView('welcome');
     };
-    
-    const handleLogout = () => {
-        authService.logout();
-        setCurrentUser(null);
-        setIsAuthenticated(false);
-        setEntries([]);
-        localStorage.removeItem('mood_journal_session');
-        setView('auth');
-    };  
 
-    const startJournal = () => setView("journal");
-  
-    const handleSurveySubmit = async (entry) => {
+    const handleLogout = async () => {
+      await authService.logout();
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      setEntries([]);
+      setView('auth');
+    };
+
+    /* -------------------- JOURNAL HANDLERS -------------------- */
+    const startJournal = () => setView('journal');
+
+    const handleSurveySubmit = async entry => {
+      console.log('Entry object before saving:', entry);
+      console.log('MoodValue:', entry.moodValue);
+      // Save to Firestore
+      const result = await storageService.saveEntry(currentUser.uid, entry);
+      if (result.success) {
+        entry.id = result.id;
         const newEntries = [entry, ...entries];
         setEntries(newEntries);
-        
-        // Save to encrypted storage
-        await authService.storageService.saveUserEntries(currentUser.id, newEntries);
-        
         if (prefs.ai) {
-            setSelectedEntry(entry);
-            setView("ai");
+          setSelectedEntry(entry);
+          setView('ai');
         } else {
-            setView("history");
+          setView('history');
         }
+      }
     };
-  
-    const handleAIComplete = async (entryWithInsights) => {
-      const newEntries = [entryWithInsights, ...entries];
+
+    const handleAIComplete = async entryWithInsights => {
+      // Update entry with insights
+      await storageService.updateEntryInsights(entryWithInsights.id, entryWithInsights.aiInsights);
+      const newEntries = [entryWithInsights, ...entries.filter(e => e.id !== entryWithInsights.id)];
       setEntries(newEntries);
-      
-      // Save to encrypted storage
-      await authService.storageService.saveUserEntries(currentUser.id, newEntries);
-      
       setSelectedEntry(null);
-      setView("history");
-  };
-  
-    const togglePref = (key) => {
-      setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
+      setView('history');
     };
-  
-    const onNavigate = (id) => {
+
+    const togglePref = key => {
+      const updated = { ...prefs, [key]: !prefs[key] };
+      setPrefs(updated);
+      authService.updateUserPreferences(updated);
+    };
+
+    const onNavigate = id => {
       setSelectedEntry(null);
       setView(id);
     };
-  
-    const onEntryClick = (entry) => {
+
+    const onEntryClick = entry => {
       setSelectedEntry(entry);
-      setView("entry-detail");
+      setView('entry-detail');
     };
-  
+
+    /* -------------------- RENDER LOGIC -------------------- */
     if (loading) {
-      return React.createElement(
-          "div",
-          { className: "app" },
-          React.createElement("div", { className: "loading" }, "Loading...")
-      );
-  }
+      return React.createElement('div', { className: 'app' }, React.createElement('div', { className: 'loading' }, 'Loading...'));
+    }
 
     if (!isAuthenticated) {
-        return React.createElement(
-            "div",
-            { className: "app" },
-            React.createElement(AuthContainer, {
-                authService: authService,
-                onAuthSuccess: handleAuthSuccess
-            })
-        );
+      return React.createElement('div', { className: 'app' }, React.createElement(AuthContainer, {
+        authService: authService,
+        onAuthSuccess: handleAuthSuccess
+      }));
     }
-
 
     let pageContent = null;
-  
     switch (view) {
-      case "welcome":
-        pageContent = React.createElement(Welcome, {
-          onStart: startJournal,
-          onHistory: () => setView("history"),
-        });
+      case 'welcome':
+        pageContent = React.createElement(Welcome, { onStart: startJournal, onHistory: () => setView('history') });
         break;
-  
-      case "journal":
-        pageContent = React.createElement(JournalSurvey, {
-          onSubmit: handleSurveySubmit,
-          onCancel: () => setView("welcome"),
-        });
+      case 'journal':
+        pageContent = React.createElement(JournalSurvey, { onSubmit: handleSurveySubmit, onCancel: () => setView('welcome') });
         break;
-  
-      case "ai":
-        pageContent = React.createElement(AIInsights, {
-          entry: selectedEntry,
-          onDone: handleAIComplete,
-        });
+      case 'ai':
+        pageContent = React.createElement(AIInsights, { entry: selectedEntry, onDone: handleAIComplete });
         break;
-  
-      case "history":
-        pageContent = React.createElement(
-          "div",
-          { className: "page" },
-          React.createElement("h2", { className: "page-title" }, "History"),
-          React.createElement(HistoryList, {
-            entries: entries,
-            onEntryClick: onEntryClick,
-          })
-        );
+      case 'history':
+        pageContent = React.createElement('div', { className: 'page' }, React.createElement('h2', { className: 'page-title' }, 'History'), React.createElement(HistoryList, { entries: entries, onEntryClick: onEntryClick }));
         break;
-  
-      case "entry-detail":
-        pageContent = React.createElement(EntryDetail, {
-          entry: selectedEntry,
-          onBack: () => setView("history"),
-        });
+      case 'entry-detail':
+        pageContent = React.createElement(EntryDetail, { entry: selectedEntry, onBack: () => setView('history') });
         break;
-  
-      case "settings":
-        pageContent = React.createElement(Settings, {
-          prefs,
-          onToggle: togglePref,
-        });
+      case 'analytics':
+        pageContent = React.createElement(MoodAnalytics, { userId: currentUser.uid, storageService: storageService });
         break;
-  
+      case 'settings':
+        pageContent = React.createElement(Settings, { prefs: prefs, onToggle: togglePref });
+        break;
       default:
-        pageContent = React.createElement(Welcome, {
-          onStart: startJournal,
-          onHistory: () => setView("history"),
-        });
+        pageContent = React.createElement(Welcome, { onStart: startJournal, onHistory: () => setView('history') });
     }
-  
-    return React.createElement(
-      "div",
-      { className: "app" },
-      React.createElement(ThemeToggle),
-      pageContent,
-      view !== "welcome" && view !== "journal" && view !== "ai" &&
-        React.createElement(BottomNav, { current: view, onNavigate })
-    );
+
+    return React.createElement('div', { className: 'app' }, React.createElement(ThemeToggle), pageContent, view !== 'welcome' && view !== 'journal' && view !== 'ai' && React.createElement(BottomNav, { current: view, onNavigate }));
   }
   
   /**************************** RENDER *********************************/
