@@ -34,6 +34,7 @@
       subtitle: "Share something that influenced your mood today",
       type: "text",
       placeholder: "Tell me about your day...",
+      optional: true,
     },
     {
       id: "gratitude",
@@ -42,6 +43,7 @@
       subtitle: "Name one thing you appreciate today",
       type: "text",
       placeholder: "I'm grateful for...",
+      optional: true,
     },
     {
       id: "reflection",
@@ -864,7 +866,7 @@
 
     const handleAIComplete = async entryWithInsights => {
       // Update entry with insights
-      await storageService.updateEntryInsights(entryWithInsights.id, entryWithInsights.aiInsights);
+      await storageService.updateEntryInsights(currentUser.uid, entryWithInsights.id, entryWithInsights.aiInsights);
       const newEntries = [entryWithInsights, ...entries.filter(e => e.id !== entryWithInsights.id)];
       setEntries(newEntries);
       setSelectedEntry(null);
