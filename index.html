@@ -20,19 +20,78 @@
       </div>
     </div>
     <!-- Core dependencies -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
+    <!-- <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- Firebase v9 modules -->
     <script type="module" src="firebase-init.js"></script>
+      <!-- <script>
+        function waitForFirebase() {
+            if (window.auth && window.db && window.firebaseAuth) {
+                // loadAppScripts();
+            } else {
+                // Wait 100ms and check again
+                setTimeout(waitForFirebase, 100);
+            }
+            console.log('Checking Firebase initialization...');
+        }
 
+        function loadAppScripts() {
+            // Load scripts in order
+            const scripts = [
+                'toast-notifications.js',
+                'firebase-auth.js',
+                'firebase-storage.js',
+                'firebase-login-components.js',
+                'mood-analytics.js',
+                'emotions-wheel.js',
+                'enhanced-survey.js',
+                'statistics-dashboard.js',
+                'app.js'
+            ];
+            console.log('Loading app scripts:', scripts);
+            let loaded = 0;
+            scripts.forEach((src, index) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => {
+                    loaded++;
+                    if (loaded === scripts.length) {
+                        console.log('All scripts loaded successfully');
+                    }
+                };
+                script.onerror = () => {
+                    console.error(`Failed to load script: ${src}`);
+                };
+                document.head.appendChild(script);
+            });
+        }
+        // Start the loading process
+        console.log('Starting Firebase initialization check... 1');
+        waitForFirebase();
+        console.log('Waiting for Firebase to initialize... 1');
+    </script> -->
     <!-- Non-module helpers (toast, auth, storage, analytics) -->
+    <!-- <script src="toast-notifications.js"></script>
+    <script src="firebase-auth.js"></script>
+    <script src="firebase-storage.js"></script>
+    <script src="firebase-login-components.js"></script>
+    <script src="mood-analytics.js"></script> -->
     <script src="toast-notifications.js"></script>
     <script src="firebase-auth.js"></script>
     <script src="firebase-storage.js"></script>
     <script src="firebase-login-components.js"></script>
     <script src="mood-analytics.js"></script>
+    <script src="emotions-wheel.js"></script>
+    <script src="enhanced-survey.js"></script>
+    <script src="statistics-dashboard.js"></script>
+
 
     <script src="app.js"></script>
+    <script src="app.js"></script>
+    <script> 
+      console.log('App script loaded');
+    </script>
   </body>
 </html>

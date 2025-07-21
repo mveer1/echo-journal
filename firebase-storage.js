@@ -11,7 +11,6 @@
             }
         });
     }
-    console.log('Waiting for Firebase to initialize...');
     class FirebaseStorageService {
         constructor() {
             this.db = null;
