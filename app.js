@@ -629,94 +629,101 @@ function StatisticsDashboard({ entries }) {
     );
   }
   
-  // Updated Survey component with new components
-  function JournalSurvey({ onSubmit, onCancel }) {
-    const [step, setStep] = useState(0);
-    const [responses, setResponses] = useState({});
-  
-    const currentPrompt = prompts[step];
-    const totalSteps = prompts.length;
-    const isLastStep = step === totalSteps - 1;
-  
-    const handleChange = (value) => {
-      setResponses((prev) => ({ ...prev, [currentPrompt.id]: value }));
-    };
-  
-    const canProceed = () => {
-      if (currentPrompt.required) {
-        return Boolean(responses[currentPrompt.id]);
-      }
-      return true;
-    };
-  
-    const handleNext = () => {
-      if (isLastStep) {
-        // Prepare entry
-        const moodValue = responses.mood || "neutral";
-        const moodObj = moodOptions.find((m) => m.value === moodValue) || {
-          emoji: "😐",
-          name: "Neutral",
-        };
-  
+  /* ──────────────────────────────────────────────
+   JournalSurvey 2.0
+   – Handles wheel ➜ sliders ➜ journaling prompts
+   – Produces a single entry object that is
+     fully compatible with the Firebase schema
+────────────────────────────────────────────── */
+
+function JournalSurvey({ onSubmit, onCancel }) {
+  const [step, setStep] = useState(0);
+  const [responses, setResponses] = useState({});
+
+  /* prompts is the new 3-step array you added:
+     0 → emotionsWheel   1 → wellnessSliders   2 → journaling         */
+  const currentPrompt = prompts[step];
+  const totalSteps    = prompts.length;
+  const isLastStep    = step === totalSteps - 1;
+
+  /* ----------------------------- helpers ---------------------------- */
+  const handleChange = (value) => {
+    setResponses((prev) => ({ ...prev, [currentPrompt.id]: value }));
+  };
+
+  const canProceed = () =>
+    !currentPrompt.required || Boolean(responses[currentPrompt.id]);
+
+  const handleNext = () => {
+    if (!canProceed()) return;
+
+    if (isLastStep) {
+      /* ---------- create entry compatible with Firestore ---------- */
       const newEntry = {
-        id: generateId(),
-        date: getTodayISO(),
-        emotion: responses.emotions || null,
-        wellness: responses.wellness || {},
-        journalResponses: responses.journaling || {},
-        // Keep existing fields for backward compatibility
-        mood: responses.emotions?.primary || "😐",
-        moodName: responses.emotions?.specific || "neutral",
+        id:         generateId(),
+        date:       getTodayISO(),
+        emotion:    responses.emotions  || null,        // wheel payload
+        wellness:   responses.wellness  || {},          // sliders object
+        journalResponses: responses.journaling || {},   // prompt answers
+
+        /* legacy fields kept for backward-compat graphs & AI */
+        mood:     responses.emotions?.primary  || '😐',
+        moodName: responses.emotions?.specific || 'neutral',
         responses: responses.journaling || {},
-        aiInsights: null,
+        aiInsights: null
       };
-        
-  
-        onSubmit(newEntry);
-      } else {
-        setStep(step + 1);
-      }
-    };
-  
-    const handleSkip = () => {
-      if (currentPrompt.optional) {
-        setResponses(prev => ({ ...prev, [currentPrompt.id]: '' }));
-        handleNext();
-      }
-    };
-  
-    const prev = () => {
-      if (step === 0) {
-        onCancel();
-      } else {
-        setStep(step - 1);
-      }
-    };
-  
-    return React.createElement(
-      "div",
-      { className: "survey-container" },
-      React.createElement(ProgressBar, {
-        current: step + 1,
-        total: totalSteps
-      }),
-      React.createElement(Flashcard, {
-        key: currentPrompt.id,
-        prompt: currentPrompt,
-        value: responses[currentPrompt.id] || "",
-        onChange: handleChange,
-        onNext: handleNext,
-        onSkip: handleSkip,
-        canSkip: currentPrompt.optional,
-        isLast: isLastStep
-      }),
-      React.createElement(BottomActionBar, {
-        onNext: handleNext,
-        disabled: !canProceed(),
-        isLast: isLastStep
-      })
-    );
-  }
+
+      onSubmit(newEntry);
+    } else {
+      setStep(step + 1);
+    }
+  };
+
+  const handleSkip = () => {
+    if (currentPrompt.optional) {
+      setResponses((prev) => ({ ...prev, [currentPrompt.id]: '' }));
+      handleNext();
+    }
+  };
+
+  const handleBack = () => {
+    step === 0 ? onCancel() : setStep(step - 1);
+  };
+
+  /* ----------------------------- render ---------------------------- */
+  return React.createElement(
+    'div',
+    { className: 'survey-container' },
+
+    /* progress bar */
+    React.createElement(ProgressBar, {
+      current: step + 1,
+      total:   totalSteps
+    }),
+
+    /* card with the active question UI */
+    React.createElement(Flashcard, {
+      key:       currentPrompt.id,
+      prompt:    currentPrompt,
+      value:     responses[currentPrompt.id] || '',
+      onChange:  handleChange,
+      onNext:    handleNext,
+      onSkip:    handleSkip,
+      canSkip:   currentPrompt.optional,
+      isLast:    isLastStep,
+      onBack:    handleBack               // enable ⬅ navigation
+    }),
+
+    /* bottom “Next / Submit” bar */
+    React.createElement(BottomActionBar, {
+      onNext:   handleNext,
+      disabled: !canProceed(),
+      isLast:   isLastStep,
+      onBack:   handleBack
+    })
+  );
+}
+
   
   // AI Insights simulated component
   function AIInsights({ entry, onDone }) {

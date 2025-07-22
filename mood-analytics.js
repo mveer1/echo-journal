@@ -2,6 +2,9 @@
 (function(global) {
     'use strict';
 
+    const { Chart, registerables } = window;
+    Chart.register(...registerables);
+    const CHART_CACHE = {};               // {canvasId: ChartInstance}
     const { useState, useEffect } = React;
 
     // Mood Analytics Dashboard Component
@@ -84,68 +87,123 @@
         );
     }
 
-    // Mood Summary Card Component
+    // Mood Summary Card Component - Enhanced with Doughnut Chart
     function MoodSummaryCard({ data }) {
         if (!data || data.totalEntries === 0) {
-            return React.createElement(
-                'div',
-                { className: 'analytics-card' },
-                React.createElement('h3', { className: 'card-title' }, 'Weekly Summary'),
-                React.createElement('p', { className: 'empty-state' }, 'No entries yet. Start journaling to see your mood patterns!')
-            );
-        }
-
-        const moodEmojis = {
-            happy: '😊',
-            excited: '😍',
-            neutral: '😐',
-            tired: '😴',
-            sad: '😢',
-            angry: '😡',
-            anxious: '😅',
-            stressed: '😰'
-        };
-
         return React.createElement(
             'div',
-            { className: 'analytics-card mood-summary-card' },
-            React.createElement('h3', { className: 'card-title' }, 'Weekly Mood Summary'),
+            { className: 'analytics-card' },
+            React.createElement('h3', { className: 'card-title' }, 'Weekly Summary'),
+            React.createElement('p', { className: 'empty-state' }, 'No entries yet. Start journaling to see your mood patterns!')
+        );
+        }
+    
+        const moodEmojis = {
+        joy: '😊',
+        trust: '😌',
+        fear: '😰',
+        surprise: '😲',
+        sadness: '😢',
+        disgust: '🤢',
+        anger: '😡',
+        anticipation: '😤',
+        happy: '😊',
+        excited: '😍',
+        neutral: '😐',
+        tired: '😴',
+        sad: '😢',
+        angry: '😡',
+        anxious: '😅',
+        stressed: '😰'
+        };
+    
+        // Create Chart after render
+        React.useEffect(() => {
+        const ctx = document.getElementById('summaryPie');
+        if (!ctx) return;
+    
+        const labels = Object.keys(data.moodCounts);
+        const values = Object.values(data.moodCounts);
+        const colors = labels.map(mood => 
+            global.EMOTIONS_DATA && global.EMOTIONS_DATA[mood] 
+            ? global.EMOTIONS_DATA[mood].color 
+            : '#999'
+        );
+    
+        buildChart(ctx, {
+            type: 'doughnut',
+            data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: colors,
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+            },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                position: 'right',
+                labels: {
+                    usePointStyle: true,
+                    padding: 15,
+                    font: {
+                    size: 12
+                    }
+                }
+                },
+                tooltip: {
+                callbacks: {
+                    label: function(context) {
+                    const percentage = ((context.parsed / data.totalEntries) * 100).toFixed(1);
+                    return `${context.label}: ${context.parsed} (${percentage}%)`;
+                    }
+                }
+                }
+            },
+            cutout: '55%'
+            }
+        });
+        }, [data]);
+    
+        return React.createElement(
+        'div',
+        { className: 'analytics-card mood-summary-card' },
+        React.createElement('h3', { className: 'card-title' }, 'Weekly Mood Summary'),
+        React.createElement(
+            'div',
+            { className: 'summary-content' },
+            React.createElement(
+            'div',
+            { className: 'mood-stats' },
             React.createElement(
                 'div',
-                { className: 'mood-stats' },
-                React.createElement(
-                    'div',
-                    { className: 'stat-item' },
-                    React.createElement('span', { className: 'stat-number' }, data.totalEntries),
-                    React.createElement('span', { className: 'stat-label' }, 'Total Entries')
-                ),
-                React.createElement(
-                    'div',
-                    { className: 'stat-item' },
-                    React.createElement('span', { className: 'stat-emoji' }, moodEmojis[data.dominantMood] || '😐'),
-                    React.createElement('span', { className: 'stat-label' }, 'Dominant Mood')
-                )
+                { className: 'stat-item' },
+                React.createElement('span', { className: 'stat-number' }, data.totalEntries),
+                React.createElement('span', { className: 'stat-label' }, 'Total Entries')
             ),
             React.createElement(
                 'div',
-                { className: 'mood-breakdown' },
-                React.createElement('h4', { className: 'breakdown-title' }, 'Mood Breakdown'),
-                React.createElement(
-                    'div',
-                    { className: 'mood-bars' },
-                    Object.entries(data.moodCounts).map(([mood, count]) =>
-                        React.createElement(MoodBar, {
-                            key: mood,
-                            mood: mood,
-                            count: count,
-                            total: data.totalEntries,
-                            emoji: moodEmojis[mood] || '😐'
-                        })
-                    )
-                )
+                { className: 'stat-item' },
+                React.createElement('span', { className: 'stat-emoji' }, moodEmojis[data.dominantMood] || '😐'),
+                React.createElement('span', { className: 'stat-label' }, 'Dominant Mood')
             )
+            ),
+            React.createElement(
+            'div',
+            { className: 'chart-wrapper' },
+            React.createElement('canvas', { 
+                id: 'summaryPie', 
+                className: 'summary-chart'
+            })
+            )
+        )
         );
     }
+  
 
     // Mood Bar Component
     function MoodBar({ mood, count, total, emoji }) {
@@ -189,19 +247,7 @@
             'div',
             { className: 'analytics-card patterns-card' },
             React.createElement('h3', { className: 'card-title' }, 'Mood Patterns'),
-            React.createElement(
-                'div',
-                { className: 'patterns-grid' },
-                dayPatterns.map(pattern =>
-                    React.createElement(
-                        'div',
-                        { key: pattern.day, className: 'pattern-item' },
-                        React.createElement('div', { className: 'pattern-day' }, pattern.day),
-                        React.createElement('div', { className: 'pattern-mood' }, pattern.dominantMood),
-                        React.createElement('div', { className: 'pattern-count' }, `${pattern.count} entries`)
-                    )
-                )
-            )
+            React.createElement(<canvas id="trendLine" height="200"></canvas>)
         );
     }
 
@@ -300,6 +346,14 @@
             { className: 'loading-container' },
             React.createElement('div', { className: 'spinner' })
         );
+    }
+    // ---------- helper to create/destroy charts ----------
+    function buildChart(canvas, config) {
+        const id = canvas.id;
+        if (CHART_CACHE[id]) {
+            CHART_CACHE[id].destroy();
+        }
+        CHART_CACHE[id] = new Chart(canvas, config);
     }
 
     // Export to global scope

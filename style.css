@@ -2162,3 +2162,8 @@
 .journal-textarea::placeholder {
   color: var(--color-text-secondary);
 }
+
+/* analytics charts */
+.canvas-container{position:relative;height:260px;margin:1rem 0}
+.chart-type button{padding:.3rem .7rem;border:1px solid #ccc;margin-left:.25rem;border-radius:6px}
+.chart-type .active{background:var(--primary);color:#fff;border-color:var(--primary)}
