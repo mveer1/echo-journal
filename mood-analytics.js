@@ -231,25 +231,70 @@
     }
 
     // Mood Patterns Card Component
-    function MoodPatternsCard({ patterns }) {
-        if (!patterns || patterns.patterns.length === 0) {
-            return React.createElement(
-                'div',
-                { className: 'analytics-card' },
-                React.createElement('h3', { className: 'card-title' }, 'Mood Patterns'),
-                React.createElement('p', { className: 'empty-state' }, 'Not enough data to show patterns yet.')
-            );
-        }
-
-        const dayPatterns = patterns.patterns.filter(p => p.type === 'day-of-week');
-
+function MoodPatternsCard({ patterns }) {
+    if (!patterns || patterns.patterns.length === 0) {
         return React.createElement(
             'div',
-            { className: 'analytics-card patterns-card' },
+            { className: 'analytics-card' },
             React.createElement('h3', { className: 'card-title' }, 'Mood Patterns'),
-            React.createElement(<canvas id="trendLine" height="200"></canvas>)
+            React.createElement('p', { className: 'empty-state' }, 'Not enough data to show patterns yet.')
         );
     }
+
+    const dayPatterns = patterns.patterns.filter(p => p.type === 'day-of-week');
+
+    // Create Chart after render
+    React.useEffect(() => {
+        const ctx = document.getElementById('trendLine');
+        if (!ctx || !dayPatterns.length) return;
+
+        // Prepare data for chart
+        const labels = dayPatterns.map(p => p.label || p.day);
+        const values = dayPatterns.map(p => p.score || p.value);
+
+        buildChart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Mood Pattern',
+                    data: values,
+                    borderColor: '#32808d',
+                    backgroundColor: 'rgba(50, 128, 141, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Weekly Mood Patterns'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10
+                    }
+                }
+            }
+        });
+    }, [dayPatterns]);
+
+    return React.createElement(
+        'div',
+        { className: 'analytics-card patterns-card' },
+        React.createElement('h3', { className: 'card-title' }, 'Mood Patterns'),
+        React.createElement('canvas', { 
+            id: 'trendLine', 
+            height: '200',
+            style: { maxHeight: '200px' }
+        })
+    );
+}
 
     // Consistency Card Component
     function ConsistencyCard({ score, totalEntries }) {

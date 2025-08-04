@@ -389,7 +389,7 @@ function EnhancedJournaling({ value, onChange }) {
 function StatisticsDashboard({ entries }) {
   const [period, setPeriod] = useState('week');
   const [chartData, setChartData] = useState(null);
-
+  console.log('here?')
   useEffect(() => {
     if (entries.length > 0) {
       generateChartData();
@@ -443,7 +443,7 @@ function StatisticsDashboard({ entries }) {
       }
     }
   }, [chartData]);
-
+  console.log('chart-contrainer');
   return React.createElement(
     'div',
     { className: 'statistics-dashboard' },
@@ -1178,20 +1178,26 @@ function JournalSurvey({ onSubmit, onCancel }) {
       }));
     }
 
+    // Add this debug code temporarily to your app.js or statistics-dashboard.js
+    console.log('Chart.js available:', typeof window.Chart);
+    console.log('Chart object:', window.Chart);
+    console.log('Registerables:', window.Chart?.registerables);
+
+    
     let pageContent = null;
     switch (view) {
       case 'welcome':
         pageContent = React.createElement(Welcome, { onStart: startJournal, onHistory: () => setView('history') });
         break;
-      case 'journal':
-        pageContent = React.createElement(JournalSurvey, { onSubmit: handleSurveySubmit, onCancel: () => setView('welcome') });
-        break;
-      case 'ai':
-        pageContent = React.createElement(AIInsights, { entry: selectedEntry, onDone: handleAIComplete });
-        break;
       case 'insights':
         pageContent = React.createElement(StatisticsDashboard, { entries: entries });
-        break;        
+        break;      
+      case 'journal':
+          pageContent = React.createElement(JournalSurvey, { onSubmit: handleSurveySubmit, onCancel: () => setView('welcome') });
+          break;
+      case 'ai':
+          pageContent = React.createElement(AIInsights, { entry: selectedEntry, onDone: handleAIComplete });
+          break;  
       case 'history':
         pageContent = React.createElement('div', { className: 'page' }, React.createElement('h2', { className: 'page-title' }, 'History'), React.createElement(HistoryList, { entries: entries, onEntryClick: onEntryClick }));
         break;

@@ -8,7 +8,7 @@
       Chart.register(...registerables);
     }
     const CHART_CACHE = {};
-  
+    console.log('Chart.js initialized:', !!Chart);
     // Helper to create/destroy charts safely
     function buildChart(canvas, config) {
       const id = canvas.id;
@@ -19,7 +19,7 @@
       CHART_CACHE[id] = new Chart(canvas, config);
       return CHART_CACHE[id];
     }
-  
+    console.log('Chart cache initialized:', CHART_CACHE);
     // Utility to compute mood counts per period
     function computeMoodSummary(entries, period) {
       const summary = {};
@@ -54,12 +54,16 @@
       const [isLoading, setIsLoading] = React.useState(true);
   
       React.useEffect(() => {
+        console.log('MoodChart useEffect triggered');
+        console.log('Chart ref:', chartRef.current);
+        console.log('Data passed:', data);
         if (!chartRef.current || !data || Object.keys(data).length === 0) {
           setIsLoading(false);
           return;
         }
   
         const ctx = chartRef.current;
+        console.log('Canvas context:', ctx);
         const labels = Object.keys(data);
         const values = Object.values(data);
         
@@ -250,13 +254,16 @@
   
     // Main statistics dashboard component
     function StatisticsDashboard({ entries = [] }) {
+      console.log('StatisticsDashboard entries:', entries);
+      console.log('Entries length:', entries.length);
       const [period, setPeriod] = React.useState('week');
       const [chartType, setChartType] = React.useState('bar');
   
       const { counts: summary, filteredEntries } = computeMoodSummary(entries, period);
       const totalEntries = entries.length;
       const periodEntries = filteredEntries.length;
-  
+      console.log('Computed summary:', summary);
+      console.log('Filtered entries:', filteredEntries);
       // Calculate additional stats
       const avgEntriesPerDay = period === 'week' ? (periodEntries / 7).toFixed(1) :
                              period === 'month' ? (periodEntries / 30).toFixed(1) :
@@ -265,7 +272,8 @@
       const mostCommonMood = Object.keys(summary).reduce((a, b) => 
         summary[a] > summary[b] ? a : b, Object.keys(summary)[0] || 'none'
       );
-  
+      
+
       return React.createElement(
         'div',
         { className: 'statistics-dashboard' },
