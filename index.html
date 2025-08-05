@@ -1,96 +1,440 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mood Journal</title>
-    <meta name="description" content="A minimalist mood journaling app with AI insights" />
-    <meta name="theme-color" content="#21808D" />
-    <!-- <meta name="theme-color" content="#32808d"> -->
-    <link rel="stylesheet" href="style.css" />
-    <!-- React CDN -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  </head>
-  <body>
-    <div id="app">
-      <div class="loading">
-        <div class="spinner"></div>
-      </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo Journal - Mindful Emotional Reflection</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-container">
+            <div class="logo">
+                <div class="logo-placeholder">
+                    <div class="logo-shape"></div>
+                </div>
+                <h1>Echo Journal</h1>
+            </div>
+            <div class="loading-bar-container">
+                <div class="loading-bar">
+                    <div class="loading-progress"></div>
+                </div>
+            </div>
+            <div class="wellness-tip">
+                <p id="wellness-tip-text">Take three deep breaths before starting your day</p>
+            </div>
+        </div>
     </div>
-    <!-- Core dependencies -->
-    <!-- <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
-    <!-- Chart.js 4.x -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-    <!-- Firebase v9 modules -->
-    <script type="module" src="firebase-init.js"></script>
-      <!-- <script>
-        function waitForFirebase() {
-            if (window.auth && window.db && window.firebaseAuth) {
-                // loadAppScripts();
-            } else {
-                // Wait 100ms and check again
-                setTimeout(waitForFirebase, 100);
-            }
-            console.log('Checking Firebase initialization...');
-        }
+    <!-- Authentication Screen -->
+    <div id="auth-screen" class="auth-screen hidden">
+        <!-- Animated Background Particles -->
+        <div class="animated-background">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        
+        <div class="auth-container">
+            <div class="auth-logo">
+                <div class="logo-placeholder">
+                    <div class="logo-shape"></div>
+                </div>
+                <h1>Echo Journal</h1>
+                <p>Your mindful sanctuary for emotional reflection</p>
+            </div>
+            
+            <div class="auth-forms">
+                <!-- Login Form -->
+                <div id="login-form" class="auth-form">
+                    <h2>Welcome Back</h2>
+                    <form id="login-email-form">
+                        <div class="form-group glassmorphism-input">
+                            <input type="email" id="login-email" required>
+                            <label for="login-email">Email</label>
+                            <div class="input-border"></div>
+                        </div>
+                        <div class="form-group glassmorphism-input">
+                            <input type="password" id="login-password" required>
+                            <label for="login-password">Password</label>
+                            <div class="input-border"></div>
+                        </div>
+                        <button type="submit" class="btn btn--primary">Sign In</button>
+                    </form>
+                    <div class="auth-divider">
+                        <span>or</span>
+                    </div>
+                    <button id="google-signin" class="btn btn--outline google-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Continue with Google
+                    </button>
+                    <p class="auth-switch">Don't have an account? <a href="#" id="show-register">Sign up</a></p>
+                </div>
 
-        function loadAppScripts() {
-            // Load scripts in order
-            const scripts = [
-                'toast-notifications.js',
-                'firebase-auth.js',
-                'firebase-storage.js',
-                'firebase-login-components.js',
-                'mood-analytics.js',
-                'emotions-wheel.js',
-                'enhanced-survey.js',
-                'statistics-dashboard.js',
-                'app.js'
-            ];
-            console.log('Loading app scripts:', scripts);
-            let loaded = 0;
-            scripts.forEach((src, index) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = () => {
-                    loaded++;
-                    if (loaded === scripts.length) {
-                        console.log('All scripts loaded successfully');
-                    }
-                };
-                script.onerror = () => {
-                    console.error(`Failed to load script: ${src}`);
-                };
-                document.head.appendChild(script);
-            });
-        }
-        // Start the loading process
-        console.log('Starting Firebase initialization check... 1');
-        waitForFirebase();
-        console.log('Waiting for Firebase to initialize... 1');
-    </script> -->
-    <!-- Non-module helpers (toast, auth, storage, analytics) -->
-    <!-- <script src="toast-notifications.js"></script>
-    <script src="firebase-auth.js"></script>
-    <script src="firebase-storage.js"></script>
-    <script src="firebase-login-components.js"></script>
-    <script src="mood-analytics.js"></script> -->
-    <script src="toast-notifications.js"></script>
-    <script src="firebase-auth.js"></script>
-    <script src="firebase-storage.js"></script>
-    <script src="firebase-login-components.js"></script>
-    <script src="mood-analytics.js"></script>
-    <script src="emotions-wheel.js"></script>
-    <script src="enhanced-survey.js"></script>
-    <script src="statistics-dashboard.js"></script>
+                <!-- Register Form -->
+                <div id="register-form" class="auth-form hidden">
+                    <h2>Create Account</h2>
+                    <form id="register-email-form">
+                        <div class="form-group glassmorphism-input">
+                            <input type="email" id="register-email" required>
+                            <label for="register-email">Email</label>
+                            <div class="input-border"></div>
+                        </div>
+                        <div class="form-group glassmorphism-input">
+                            <input type="password" id="register-password" required>
+                            <label for="register-password">Password (min 6 characters)</label>
+                            <div class="input-border"></div>
+                        </div>
+                        <button type="submit" class="btn btn--primary">Create Account</button>
+                    </form>
+                    <div class="auth-divider">
+                        <span>or</span>
+                    </div>
+                    <button id="google-signup" class="btn btn--outline google-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Sign up with Google
+                    </button>
+                    <p class="auth-switch">Already have an account? <a href="#" id="show-login">Sign in</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Home Screen -->
+    <div id="home-screen" class="home-screen hidden">
+        <div class="background-particles"></div>
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo-placeholder small">
+                    <div class="logo-shape"></div>
+                </div>
+                <span>Echo Journal</span>
+            </div>
+            <div class="header-right">
+                <span id="user-greeting">Welcome back!</span>
+                <button id="logout-btn" class="btn btn--outline btn--sm">
+                    <span class="logout-text">Logout</span>
+                    <span class="logout-loading hidden">Logging out...</span>
+                </button>
+            </div>
+        </header>
+        
+        <main class="home-main">
+            <div class="home-content">
+                <h1>Your Mindful Sanctuary</h1>
+                <p>Choose your path to emotional reflection and personal growth</p>
+                
+                <div class="home-options">
+                    <div class="home-option" id="journal-option">
+                        <div class="option-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10 9 9 9 8 9"/>
+                            </svg>
+                        </div>
+                        <h3>Journal</h3>
+                        <p>Reflect on your emotions and capture your thoughts</p>
+                    </div>
+                    
+                    <div class="home-option" id="history-option">
+                        <div class="option-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3v5h5"/>
+                                <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
+                                <path d="M12 7v5l4 2"/>
+                            </svg>
+                        </div>
+                        <h3>History</h3>
+                        <p>Explore your emotional patterns and past entries</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Journal Screen -->
+    <div id="journal-screen" class="journal-screen hidden">
+        <header class="app-header">
+            <button id="back-to-home" class="btn btn--outline btn--sm">← Back</button>
+            <div class="header-center">
+                <span>Journal Entry</span>
+            </div>
+            <div class="journal-progress">
+                <div class="progress-dots">
+                    <div class="dot active" data-step="1"></div>
+                    <div class="dot" data-step="2"></div>
+                    <div class="dot" data-step="3"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Step 1: Emotion Selection -->
+        <div id="emotion-step" class="journal-step active">
+            <div class="step-content">
+                <h2>How are you feeling?</h2>
+                <p>Select the emotion groups that resonate with you</p>
+                
+                <div class="emotion-circles-container">
+                    <div class="emotion-circle-wrapper">
+                        <div id="emotion-groups-circle" class="emotion-circle enhanced">
+                            <div class="circle-center">
+                                <span>Emotions</span>
+                            </div>
+                            <div class="emotion-sector" data-emotion="joy">
+                                <span>Joy</span>
+                            </div>
+                            <div class="emotion-sector" data-emotion="sadness">
+                                <span>Sadness</span>
+                            </div>
+                            <div class="emotion-sector" data-emotion="anger">
+                                <span>Anger</span>
+                            </div>
+                            <div class="emotion-sector" data-emotion="fear">
+                                <span>Fear</span>
+                            </div>
+                            <div class="emotion-sector" data-emotion="love">
+                                <span>Love</span>
+                            </div>
+                            <div class="emotion-sector" data-emotion="surprise">
+                                <span>Surprise</span>
+                            </div>
+                            <div class="emotion-sector" data-emotion="disgust">
+                                <span>Disgust</span>
+                            </div>
+                            <div class="emotion-sector" data-emotion="calm">
+                                <span>Calm</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="emotion-circle-wrapper" id="specific-emotions-wrapper">
+                        <div id="specific-emotions-circle" class="emotion-circle enhanced">
+                            <div class="circle-center">
+                                <span>Select specific emotions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="selected-emotions">
+                    <h3>Selected Emotions <span id="emotion-count">(0)</span></h3>
+                    <div id="emotion-tags" class="emotion-tags"></div>
+                </div>
+                
+                <button id="emotions-next" class="btn btn--primary" disabled>Continue</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Intensity Sliders -->
+        <div id="intensity-step" class="journal-step">
+            <div class="step-content">
+                <h2>Rate your current state</h2>
+                <p>Move the sliders to reflect how you're feeling right now</p>
+                
+                <div class="intensity-sliders">
+                    <div class="slider-group">
+                        <label>Stress Level</label>
+                        <div class="slider-container">
+                            <input type="range" id="stress-slider" min="0" max="10" value="5" class="slider">
+                            <span class="slider-value" id="stress-value">5</span>
+                        </div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>Energy Level</label>
+                        <div class="slider-container">
+                            <input type="range" id="energy-slider" min="0" max="10" value="5" class="slider">
+                            <span class="slider-value" id="energy-value">5</span>
+                        </div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>Social Connection</label>
+                        <div class="slider-container">
+                            <input type="range" id="social-slider" min="0" max="10" value="5" class="slider">
+                            <span class="slider-value" id="social-value">5</span>
+                        </div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>Physical Comfort</label>
+                        <div class="slider-container">
+                            <input type="range" id="physical-slider" min="0" max="10" value="5" class="slider">
+                            <span class="slider-value" id="physical-value">5</span>
+                        </div>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <label>Mental Clarity</label>
+                        <div class="slider-container">
+                            <input type="range" id="clarity-slider" min="0" max="10" value="5" class="slider">
+                            <span class="slider-value" id="clarity-value">5</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-navigation">
+                    <button id="intensity-back" class="btn btn--outline">← Back</button>
+                    <button id="intensity-next" class="btn btn--primary">Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Journal Writing -->
+        <div id="writing-step" class="journal-step">
+            <div class="step-content">
+                <h2>Express yourself</h2>
+                <p>Let your thoughts flow freely in this safe space</p>
+                
+                <div class="journal-prompt" id="journal-prompt">
+                    <p><strong>Prompt:</strong> What emotions am I experiencing right now, and what might have triggered them?</p>
+                </div>
+                
+                <div class="journal-editor">
+                    <textarea id="journal-text" placeholder="Start writing your thoughts here..."></textarea>
+                    <div class="editor-footer">
+                        <span class="word-count" id="word-count">0 words</span>
+                        <button id="save-draft" class="btn btn--outline btn--sm">Save Draft</button>
+                    </div>
+                </div>
+                
+                <div class="step-navigation">
+                    <button id="writing-back" class="btn btn--outline">← Back</button>
+                    <button id="save-entry" class="btn btn--primary">Save Entry</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Screen -->
+    <div id="history-screen" class="history-screen hidden">
+        <header class="app-header">
+            <button id="back-to-home-history" class="btn btn--outline btn--sm">← Back</button>
+            <div class="header-center">
+                <span>Your Journey</span>
+            </div>
+        </header>
+
+        <div class="history-tabs">
+            <button class="tab-btn active" data-tab="insights">Insights</button>
+            <button class="tab-btn" data-tab="entries">Entries</button>
+        </div>
+
+        <!-- Insights Tab -->
+        <div id="insights-tab" class="tab-content active">
+            <div class="insights-grid">
+                <div class="insight-card">
+                    <h3>Emotional Overview</h3>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="emotion-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="insight-card">
+                    <h3>Weekly Patterns</h3>
+                    <div class="chart-container" style="position: relative; height: 300px;">
+                        <canvas id="weekly-chart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="insight-card calendar-card">
+                    <h3>Mood Calendar</h3>
+                    <div id="mood-calendar" class="mood-calendar">
+                        <!-- Calendar will be generated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="insight-card stats-card">
+                    <h3>Quick Stats</h3>
+                    <div class="stats-grid">
+                        <div class="stat">
+                            <span class="stat-value" id="total-entries">0</span>
+                            <span class="stat-label">Total Entries</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value" id="current-streak">0</span>
+                            <span class="stat-label">Current Streak</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value" id="avg-mood">-</span>
+                            <span class="stat-label">Avg Mood</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entries Tab -->
+        <div id="entries-tab" class="tab-content">
+            <div class="entries-header">
+                <div class="search-bar">
+                    <input type="text" id="search-entries" placeholder="Search your entries...">
+                </div>
+                <select id="filter-entries" class="form-control">
+                    <option value="all">All Entries</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                </select>
+            </div>
+            
+            <div id="entries-list" class="entries-list">
+                <!-- Entries will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Entry Saved!</h3>
+            </div>
+            <div class="modal-body">
+                <p>Your journal entry has been saved successfully. Thank you for taking time to reflect on your emotions.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="close-success-modal" class="btn btn--primary">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Main Application Script -->
     <script src="app.js"></script>
-    <script> 
-      console.log('App script loaded');
-    </script>
-  </body>
+</body>
 </html>

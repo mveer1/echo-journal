@@ -1,1246 +1,1190 @@
-// app.js - Mood Journal PWA (vanilla React with no build step)
-
-(function () {
-
-  // Alias React & ReactDOM from global scope
-  const { useState, useEffect, useCallback } = React;
-  
-  /**************************** DATA *********************************/
-  
-  // Replace lines 30-40 with this comprehensive emotions wheel data
-const emotionsWheelData = {
-  joy: {
-    name: 'Joy',
-    color: '#FFD700',
-    intensities: ['serenity', 'joy', 'ecstasy'],
-    specificEmotions: ['contentment', 'pleasure', 'bliss', 'euphoria']
-  },
-  trust: {
-    name: 'Trust',
-    color: '#90EE90',
-    intensities: ['acceptance', 'trust', 'admiration'],
-    specificEmotions: ['confidence', 'faith', 'respect', 'devotion']
-  },
-  fear: {
-    name: 'Fear',
-    color: '#9370DB',
-    intensities: ['apprehension', 'fear', 'terror'],
-    specificEmotions: ['anxiety', 'worry', 'dread', 'panic']
-  },
-  surprise: {
-    name: 'Surprise',
-    color: '#87CEEB',
-    intensities: ['distraction', 'surprise', 'amazement'],
-    specificEmotions: ['confusion', 'wonder', 'bewilderment', 'astonishment']
-  },
-  sadness: {
-    name: 'Sadness',
-    color: '#4682B4',
-    intensities: ['pensiveness', 'sadness', 'grief'],
-    specificEmotions: ['melancholy', 'sorrow', 'despair', 'anguish']
-  },
-  disgust: {
-    name: 'Disgust',
-    color: '#DDA0DD',
-    intensities: ['boredom', 'disgust', 'loathing'],
-    specificEmotions: ['dislike', 'revulsion', 'contempt', 'hatred']
-  },
-  anger: {
-    name: 'Anger',
-    color: '#FF6347',
-    intensities: ['annoyance', 'anger', 'rage'],
-    specificEmotions: ['irritation', 'frustration', 'fury', 'wrath']
-  },
-  anticipation: {
-    name: 'Anticipation',
-    color: '#FFA500',
-    intensities: ['interest', 'anticipation', 'vigilance'],
-    specificEmotions: ['curiosity', 'excitement', 'eagerness', 'alertness']
-  }
+// Firebase Configuration and Initialization
+const firebaseConfig = {
+  apiKey: "AIzaSyDojKZlkGI6-VqOLFJGYEcmKUx7ztYFaa0",
+  authDomain: "echo-app-a2027.firebaseapp.com",
+  projectId: "echo-app-a2027",
+  storageBucket: "echo-app-a2027.firebasestorage.app",
+  messagingSenderId: "638785612372",
+  appId: "1:638785612372:web:205016cfe366430b1adbc1",
+  measurementId: "G-LRTWNMD72Q"
 };
 
-// Add wellness metrics configuration
-const wellnessMetrics = [
-  { id: 'stress', label: 'Stress Level', color: '#FF6B6B', min: 'Very Relaxed', max: 'Very Stressed' },
-  { id: 'anxiety', label: 'Anxiety Level', color: '#4ECDC4', min: 'Very Calm', max: 'Very Anxious' },
-  { id: 'energy', label: 'Energy Level', color: '#45B7D1', min: 'Very Low', max: 'Very High' },
-  { id: 'motivation', label: 'Motivation Level', color: '#96CEB4', min: 'Very Low', max: 'Very High' },
-  { id: 'social', label: 'Social Connection', color: '#FFEAA7', min: 'Very Isolated', max: 'Very Connected' }
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Application Data
+const emotionGroups = {
+  joy: ["Happiness", "Excitement", "Contentment", "Bliss", "Elation", "Euphoria", "Delight"],
+  sadness: ["Melancholy", "Grief", "Sorrow", "Despair", "Gloom", "Dejection", "Heartbreak"],
+  anger: ["Frustration", "Rage", "Irritation", "Fury", "Resentment", "Indignation", "Annoyance"],
+  fear: ["Anxiety", "Worry", "Panic", "Dread", "Terror", "Nervousness", "Apprehension"],
+  love: ["Affection", "Compassion", "Tenderness", "Adoration", "Devotion", "Warmth", "Care"],
+  surprise: ["Wonder", "Amazement", "Astonishment", "Curiosity", "Awe", "Bewilderment", "Shock"],
+  disgust: ["Aversion", "Revulsion", "Contempt", "Loathing", "Distaste", "Repulsion", "Scorn"],
+  calm: ["Peace", "Serenity", "Tranquility", "Relaxation", "Stillness", "Composure", "Balance"]
+};
+
+const wellnessTips = [
+  "Take three deep breaths before starting your day",
+  "Gratitude can shift your perspective in moments",
+  "Your feelings are valid and temporary",
+  "Small steps lead to meaningful change",
+  "Self-compassion is a form of strength",
+  "Every emotion has something to teach you",
+  "Progress isn't always linear, and that's okay",
+  "Mindful moments can happen anywhere, anytime",
+  "Your mental health matters as much as your physical health",
+  "Reflection helps transform experience into wisdom"
 ];
 
-// Add evidence-based journaling prompts
-const journalingPrompts = [
-  {
-    category: 'gratitude',
-    questions: [
-      'List three things you\'re grateful for today and why they matter to you.',
-      'Describe a person who made a positive impact on your day.',
-      'What small moment today brought you joy or peace?'
-    ]
-  },
-  {
-    category: 'coping',
-    questions: [
-      'What challenges are you facing right now and how are you managing them?',
-      'Describe a time today when you felt strong or capable.',
-      'What coping strategies worked well for you this week?'
-    ]
-  },
-  {
-    category: 'growth',
-    questions: [
-      'What did you learn about yourself today?',
-      'Describe a moment when you felt proud of how you handled a situation.',
-      'What would you like to improve about how you respond to stress?'
-    ]
-  },
-  {
-    category: 'future',
-    questions: [
-      'What are you looking forward to that brings you hope?',
-      'How do you want to feel tomorrow, and what can help you get there?',
-      'What positive changes would you like to see in your life this month?'
-    ]
-  }
+const journalPrompts = [
+  "What emotions am I experiencing right now, and what might have triggered them?",
+  "How did my body feel throughout the day, and what does it need?",
+  "What am I grateful for in this moment?",
+  "What patterns am I noticing in my thoughts and feelings?",
+  "How can I show myself compassion today?",
+  "What would I tell a friend experiencing what I'm going through?",
+  "What do I need to let go of to move forward?",
+  "How did I grow or learn something new today?"
 ];
 
-const prompts = [
-  {
-    id: "emotions",
-    question: "How are you feeling today?",
-    title: "Select Your Primary Emotion",
-    subtitle: "Choose the emotion that best represents how you're feeling right now",
-    type: "emotionsWheel",
-    required: true,
+// Global State
+let currentUser = null;
+let selectedEmotions = [];
+let currentStep = 1;
+let journalData = {
+  emotions: [],
+  intensities: {
+    stress: 5,
+    energy: 5,
+    social: 5,
+    physical: 5,
+    clarity: 5
   },
-  {
-    id: "wellness",
-    question: "How are your wellness levels today?",
-    title: "Wellness Check-in",
-    subtitle: "Rate your current levels on these wellness dimensions",
-    type: "wellnessSliders",
-    required: true,
-  },
-  {
-    id: "journaling",
-    question: "Would you like to reflect on your day?",
-    title: "Reflection Time",
-    subtitle: "Take a moment to write about your thoughts and feelings",
-    type: "journaling",
-    optional: true,
-  }
-];
+  text: ''
+};
 
+// DOM Elements
+const loadingScreen = document.getElementById('loading-screen');
+const authScreen = document.getElementById('auth-screen');
+const homeScreen = document.getElementById('home-screen');
+const journalScreen = document.getElementById('journal-screen');
+const historyScreen = document.getElementById('history-screen');
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', function() {
+  initializeApp();
+  setupEventListeners();
+  setupInputPlaceholders();
+});
+
+// Application Initialization
+function initializeApp() {
+  showLoadingScreen();
   
-  /**************************** UTILITIES *********************************/
-  
-  function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-  }
-  
-  function getTodayISO() {
-    return new Date().toISOString().split("T")[0];
-  }
-  
-  function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
-  
-  /**************************** COMPONENTS *********************************/
-  
-  // Theme Toggle Component - NEW
-  function ThemeToggle() {
-    const [isDark, setIsDark] = useState(() => {
-      const saved = localStorage.getItem('theme');
-      return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    });
-  
-    useEffect(() => {
-      document.body.classList.toggle('dark', isDark);
-      document.documentElement.setAttribute('data-color-scheme', isDark ? 'dark' : 'light');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    }, [isDark]);
-  
-    return React.createElement(
-      "button",
-      {
-        className: "theme-toggle",
-        onClick: () => setIsDark(!isDark),
-        "aria-label": "Toggle dark mode"
-      },
-      isDark ? '🌞' : '🌙'
-    );
-  }
-  
-  // Progress Bar Component - NEW
-  function ProgressBar({ current, total }) {
-    const percentage = (current / total) * 100;
-    
-    return React.createElement(
-      "div",
-      { className: "progress-bar" },
-      React.createElement("div", {
-        className: "progress-fill",
-        style: { width: `${percentage}%` }
-      })
-    );
-  }
-  
-  // Bottom Navigation
-  function BottomNav({ current, onNavigate }) {
-    const navItems = [
-      { id: "journal", icon: "📓", label: "Journal" },
-      { id: "history", icon: "📅", label: "History" },
-      { id: "insights", icon: "📊", label: "Insights" },
-      { id: "settings", icon: "⚙️", label: "Settings" },
-    ];
-    
-  
-    return React.createElement(
-      "nav",
-      { className: "bottom-nav" },
-      navItems.map((item) =>
-        React.createElement(
-          "button",
-          {
-            key: item.id,
-            className: `nav-item ${current === item.id ? "active" : ""}`,
-            onClick: () => onNavigate(item.id),
-            "aria-label": item.label,
-          },
-          React.createElement("span", { className: "nav-icon" }, item.icon),
-          React.createElement("span", { className: "nav-text" }, item.label)
-        )
-      )
-    );
-  }
-
-  // Add Emotions Wheel Component
-function EmotionsWheel({ value, onChange }) {
-  const [selectedEmotion, setSelectedEmotion] = useState(null);
-  const [selectedSpecific, setSelectedSpecific] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const handleEmotionSelect = (emotionKey) => {
-    setSelectedEmotion(emotionKey);
-    setSelectedSpecific(null);
-  };
-
-  const handleSpecificSelect = (specific, intensity) => {
-    setSelectedSpecific(specific);
-    onChange({
-      primary: selectedEmotion,
-      specific: specific,
-      intensity: intensity,
-      value: emotionsWheelData[selectedEmotion].intensities.indexOf(intensity) + 1
-    });
-  };
-
-  return React.createElement(
-    'div',
-    { className: 'emotions-wheel-container' },
-    React.createElement(
-      'div',
-      { className: 'emotions-wheel' },
-      Object.entries(emotionsWheelData).map(([key, emotion], index) =>
-        React.createElement(
-          'div',
-          {
-            key: key,
-            className: `emotion-segment ${selectedEmotion === key ? 'selected' : ''}`,
-            style: {
-              '--emotion-color': emotion.color,
-              '--angle': `${index * 45}deg`,
-              transform: `rotate(${index * 45}deg)`
-            },
-            onClick: () => handleEmotionSelect(key)
-          },
-          React.createElement('div', { className: 'emotion-name' }, emotion.name)
-        )
-      ),
-      React.createElement(
-        'div',
-        { className: 'wheel-center' },
-        selectedEmotion ? emotionsWheelData[selectedEmotion].name : 'Select an emotion'
-      )
-    ),
-    selectedEmotion && React.createElement(
-      'div',
-      { className: 'intensity-levels' },
-      React.createElement('h4', { className: 'intensity-title' }, 'Choose specific feeling:'),
-      React.createElement(
-        'div',
-        { className: 'intensity-emotions' },
-        emotionsWheelData[selectedEmotion].specificEmotions.map((specific, index) =>
-          React.createElement(
-            'button',
-            {
-              key: specific,
-              className: `specific-emotion ${selectedSpecific === specific ? 'selected' : ''}`,
-              style: { backgroundColor: emotionsWheelData[selectedEmotion].color },
-              onClick: () => handleSpecificSelect(specific, emotionsWheelData[selectedEmotion].intensities[Math.floor(index / 2) + 1])
-            },
-            specific
-          )
-        )
-      )
-    )
-  );
-}
-
-// Add Wellness Sliders Component
-function WellnessSliders({ value, onChange }) {
-  const [values, setValues] = useState(value || {});
-
-  const handleSliderChange = (metricId, newValue) => {
-    const updated = { ...values, [metricId]: parseInt(newValue) };
-    setValues(updated);
-    onChange(updated);
-  };
-
-  return React.createElement(
-    'div',
-    { className: 'wellness-sliders' },
-    wellnessMetrics.map(metric =>
-      React.createElement(
-        'div',
-        { key: metric.id, className: 'wellness-slider' },
-        React.createElement(
-          'div',
-          { className: 'slider-header' },
-          React.createElement('h4', null, metric.label),
-          React.createElement('div', { className: 'slider-description' }, `Rate from 1-10`)
-        ),
-        React.createElement(
-          'div',
-          { className: 'slider-container' },
-          React.createElement(
-            'div',
-            { className: 'slider-labels' },
-            React.createElement('span', null, metric.min),
-            React.createElement('span', null, metric.max)
-          ),
-          React.createElement('input', {
-            type: 'range',
-            min: 1,
-            max: 10,
-            value: values[metric.id] || 5,
-            onChange: (e) => handleSliderChange(metric.id, e.target.value),
-            className: 'wellness-range-input',
-            style: { '--slider-color': metric.color }
-          }),
-          React.createElement('div', { className: 'slider-value' }, values[metric.id] || 5)
-        )
-      )
-    )
-  );
-}
-
-// Add Enhanced Journaling Component
-function EnhancedJournaling({ value, onChange }) {
-  const [responses, setResponses] = useState(value || {});
-  const [currentPrompts, setCurrentPrompts] = useState([]);
-
-  useEffect(() => {
-    // Select random prompts from different categories
-    const selected = journalingPrompts.map(category => {
-      const randomIndex = Math.floor(Math.random() * category.questions.length);
-      return {
-        category: category.category,
-        question: category.questions[randomIndex]
-      };
-    });
-    setCurrentPrompts(selected.slice(0, 3)); // Show 3 prompts
-  }, []);
-
-  const handleResponseChange = (category, response) => {
-    const updated = { ...responses, [category]: response };
-    setResponses(updated);
-    onChange(updated);
-  };
-
-  return React.createElement(
-    'div',
-    { className: 'journal-questions' },
-    currentPrompts.map(prompt =>
-      React.createElement(
-        'div',
-        { key: prompt.category, className: 'journal-question' },
-        React.createElement('label', { className: 'question-label' }, prompt.question),
-        React.createElement('textarea', {
-          className: 'journal-textarea',
-          value: responses[prompt.category] || '',
-          onChange: (e) => handleResponseChange(prompt.category, e.target.value),
-          placeholder: 'Write your thoughts here...',
-          rows: 4
-        })
-      )
-    )
-  );
-}
-
-// Add Statistics Dashboard Component
-function StatisticsDashboard({ entries }) {
-  const [period, setPeriod] = useState('week');
-  const [chartData, setChartData] = useState(null);
-  console.log('here?')
-  useEffect(() => {
-    if (entries.length > 0) {
-      generateChartData();
-    }
-  }, [entries, period]);
-
-  const generateChartData = () => {
-    const now = new Date();
-    const days = period === 'week' ? 7 : period === 'month' ? 30 : 365;
-    const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    
-    const filteredEntries = entries.filter(entry => 
-      new Date(entry.date) >= startDate
-    );
-
-    const emotionCounts = {};
-    filteredEntries.forEach(entry => {
-      const emotion = entry.emotion?.primary || entry.moodName || 'neutral';
-      emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
-    });
-
-    setChartData({
-      labels: Object.keys(emotionCounts),
-      datasets: [{
-        label: 'Mood Frequency',
-        data: Object.values(emotionCounts),
-        backgroundColor: Object.keys(emotionCounts).map(emotion => 
-          emotionsWheelData[emotion]?.color || '#gray'
-        )
-      }]
-    });
-  };
-
-  useEffect(() => {
-    if (chartData && window.Chart) {
-      const ctx = document.getElementById('moodChart');
-      if (ctx) {
-        new window.Chart(ctx, {
-          type: 'bar',
-          data: chartData,
-          options: {
-            responsive: true,
-            plugins: {
-              title: {
-                display: true,
-                text: `Mood Patterns - Last ${period}`
-              }
-            }
-          }
-        });
-      }
-    }
-  }, [chartData]);
-  console.log('chart-contrainer');
-  return React.createElement(
-    'div',
-    { className: 'statistics-dashboard' },
-    React.createElement(
-      'div',
-      { className: 'stats-header' },
-      React.createElement('h2', null, 'Mood Insights'),
-      React.createElement(
-        'div',
-        { className: 'period-selector' },
-        ['week', 'month', 'year'].map(p =>
-          React.createElement(
-            'button',
-            {
-              key: p,
-              className: `period-button ${period === p ? 'active' : ''}`,
-              onClick: () => setPeriod(p)
-            },
-            p.charAt(0).toUpperCase() + p.slice(1)
-          )
-        )
-      )
-    ),
-    React.createElement(
-      'div',
-      { className: 'chart-container' },
-      React.createElement('canvas', { id: 'moodChart', className: 'mood-bar-chart' })
-    ),
-    React.createElement(
-      'div',
-      { className: 'stats-footer' },
-      `Total entries: ${entries.length}`
-    )
-  );
-}
-
-  
-  // Welcome screen
-  function Welcome({ onStart, onHistory }) {
-    return React.createElement(
-      "div",
-      { className: "page welcome-screen" },
-      React.createElement("div", { className: "welcome-emoji" }, "🌤️"),
-      React.createElement(
-        "h1",
-        { className: "page-title" },
-        "Mood Journal"
-      ),
-      React.createElement(
-        "p",
-        { className: "page-subtitle" },
-        "Capture your feelings, practice gratitude, and grow each day."
-      ),
-      React.createElement(
-        "div",
-        { className: "welcome-buttons" },
-        React.createElement(
-          "button",
-          {
-            className: "btn btn--primary btn--full-width",
-            onClick: onStart,
-          },
-          "Start Journaling"
-        ),
-        React.createElement(
-          "button",
-          {
-            className: "btn btn--secondary btn--full-width",
-            onClick: onHistory,
-          },
-          "View History"
-        )
-      )
-    );
-  }
-  
-  // Updated Flashcard component with glass morphism and proper centering
-  function Flashcard({ prompt, value, onChange, onNext, onSkip, canSkip = false, isLast = false }) {
-    const commonProps = {
-      required: prompt.required,
-      id: prompt.id,
-    };
-  
-    let content = null;
-  
-    if (prompt.type === "emotionsWheel") {
-      content = React.createElement(EmotionsWheel, {
-        value: value,
-        onChange: onChange
-      });
-    } else if (prompt.type === "wellnessSliders") {
-      content = React.createElement(WellnessSliders, {
-        value: value,
-        onChange: onChange
-      });
-    } else if (prompt.type === "journaling") {
-      content = React.createElement(EnhancedJournaling, {
-        value: value,
-        onChange: onChange
-      });
+  // Check authentication state
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      setTimeout(() => {
+        hideLoadingScreen();
+        showHomeScreen();
+      }, 3000);
     } else {
-      // Keep existing textarea logic
-      content = React.createElement("textarea", {
-        className: "text-input",
-        placeholder: prompt.placeholder || "",
-        value: value || "",
-        onChange: (e) => onChange(e.target.value),
-        rows: 3,
-        ...commonProps
-      });
+      currentUser = null;
+      setTimeout(() => {
+        hideLoadingScreen();
+        showAuthScreen();
+      }, 3000);
     }
-
-  
-    return React.createElement(
-      "div",
-      { className: "fullscreen-center" }, // ✅ Added proper centering wrapper
-      React.createElement(
-        "div",
-        { className: "card-container glass-card fade-in" }, // ✅ Updated with glass morphism classes
-        React.createElement(
-          "div",
-          null,
-          React.createElement(
-            "h2",
-            { className: "card-title" }, // ✅ Updated class name
-            prompt.title || prompt.question
-          ),
-          prompt.subtitle && React.createElement(
-            "p",
-            { className: "card-subtitle" }, // ✅ Added subtitle support
-            prompt.subtitle
-          ),
-          content
-        ),
-        
-        // ✅ Added skip button section
-        React.createElement(
-          "div",
-          { 
-            style: { 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              marginTop: '1rem' 
-            } 
-          },
-          canSkip && React.createElement(
-            "button",
-            { 
-              className: "skip-button",
-              onClick: onSkip
-            },
-            "Skip"
-          ),
-          React.createElement("div", { style: { flex: 1 } })
-        ),
-        
-        // ✅ Added swipe hint
-        React.createElement(
-          "div",
-          { className: "swipe-hint" },
-          "Swipe left to continue →"
-        )
-      )
-    );
-  }
-  
-  // Bottom Action Bar Component - NEW
-  function BottomActionBar({ onNext, disabled, isLast }) {
-    return React.createElement(
-      "div",
-      { className: "bottom-action-bar" },
-      React.createElement(
-        "button",
-        {
-          className: "glass-button",
-          onClick: onNext,
-          disabled: disabled,
-          style: { opacity: disabled ? 0.5 : 1 }
-        },
-        isLast ? 'Complete' : 'Next'
-      )
-    );
-  }
-  
-  /* ──────────────────────────────────────────────
-   JournalSurvey 2.0
-   – Handles wheel ➜ sliders ➜ journaling prompts
-   – Produces a single entry object that is
-     fully compatible with the Firebase schema
-────────────────────────────────────────────── */
-
-function JournalSurvey({ onSubmit, onCancel }) {
-  const [step, setStep] = useState(0);
-  const [responses, setResponses] = useState({});
-
-  /* prompts is the new 3-step array you added:
-     0 → emotionsWheel   1 → wellnessSliders   2 → journaling         */
-  const currentPrompt = prompts[step];
-  const totalSteps    = prompts.length;
-  const isLastStep    = step === totalSteps - 1;
-
-  /* ----------------------------- helpers ---------------------------- */
-  const handleChange = (value) => {
-    setResponses((prev) => ({ ...prev, [currentPrompt.id]: value }));
-  };
-
-  const canProceed = () =>
-    !currentPrompt.required || Boolean(responses[currentPrompt.id]);
-
-  const handleNext = () => {
-    if (!canProceed()) return;
-
-    if (isLastStep) {
-      /* ---------- create entry compatible with Firestore ---------- */
-      const newEntry = {
-        id:         generateId(),
-        date:       getTodayISO(),
-        emotion:    responses.emotions  || null,        // wheel payload
-        wellness:   responses.wellness  || {},          // sliders object
-        journalResponses: responses.journaling || {},   // prompt answers
-
-        /* legacy fields kept for backward-compat graphs & AI */
-        mood:     responses.emotions?.primary  || '😐',
-        moodName: responses.emotions?.specific || 'neutral',
-        responses: responses.journaling || {},
-        aiInsights: null
-      };
-
-      onSubmit(newEntry);
-    } else {
-      setStep(step + 1);
-    }
-  };
-
-  const handleSkip = () => {
-    if (currentPrompt.optional) {
-      setResponses((prev) => ({ ...prev, [currentPrompt.id]: '' }));
-      handleNext();
-    }
-  };
-
-  const handleBack = () => {
-    step === 0 ? onCancel() : setStep(step - 1);
-  };
-
-  /* ----------------------------- render ---------------------------- */
-  return React.createElement(
-    'div',
-    { className: 'survey-container' },
-
-    /* progress bar */
-    React.createElement(ProgressBar, {
-      current: step + 1,
-      total:   totalSteps
-    }),
-
-    /* card with the active question UI */
-    React.createElement(Flashcard, {
-      key:       currentPrompt.id,
-      prompt:    currentPrompt,
-      value:     responses[currentPrompt.id] || '',
-      onChange:  handleChange,
-      onNext:    handleNext,
-      onSkip:    handleSkip,
-      canSkip:   currentPrompt.optional,
-      isLast:    isLastStep,
-      onBack:    handleBack               // enable ⬅ navigation
-    }),
-
-    /* bottom “Next / Submit” bar */
-    React.createElement(BottomActionBar, {
-      onNext:   handleNext,
-      disabled: !canProceed(),
-      isLast:   isLastStep,
-      onBack:   handleBack
-    })
-  );
+  });
 }
 
-  
-  // AI Insights simulated component
-  function AIInsights({ entry, onDone }) {
-    const [loading, setLoading] = useState(true);
-    const [insights, setInsights] = useState(null);
-  
-    useEffect(() => {
-      // Simulate asynchronous AI processing
-      const timer = setTimeout(() => {
-        const simulatedInsights = {
-          summary: `It seems you are feeling ${entry.moodName.toLowerCase()} today. Your journal reflects your thoughts on the recent events and gratitude towards life.`,
-          mood: entry.moodName,
-          suggestions: [
-            "Take a short walk to clear your mind.",
-            "Practice 5 minutes of mindfulness meditation.",
-          ],
-          affirmation: "You are capable of handling everything that comes your way.",
-        };
-  
-        setInsights(simulatedInsights);
-        setLoading(false);
-      }, 1500);
-  
-      return () => clearTimeout(timer);
-    }, [entry]);
-  
-    const handleDone = () => {
-      // Pass the entry with insights back to parent
-      const entryWithInsights = { ...entry, aiInsights: insights };
-      onDone(entryWithInsights);
-    };
-  
-    if (loading) {
-      return React.createElement(
-        "div",
-        { className: "page" },
-        React.createElement(
-          "h2",
-          { className: "page-title" },
-          "Generating AI Insights..."
-        ),
-        React.createElement(
-          "div",
-          { className: "loading" },
-          React.createElement("div", { className: "spinner", role: "status" })
-        )
-      );
+// Input Placeholder Setup for Floating Labels
+function setupInputPlaceholders() {
+  const inputs = document.querySelectorAll('.glassmorphism-input input');
+  inputs.forEach(input => {
+    // Add placeholder attribute to trigger :not(:placeholder-shown) selector
+    if (!input.hasAttribute('placeholder')) {
+      input.setAttribute('placeholder', ' ');
     }
-  
-    return React.createElement(
-      "div",
-      { className: "page" },
-      React.createElement("h2", { className: "page-title" }, "AI Insights"),
-      React.createElement(
-        "div",
-        { className: "ai-insights" },
-        React.createElement(InsightCard, {
-          title: "Summary",
-          icon: "📝",
-          content: insights.summary,
-        }),
-        React.createElement(InsightCard, {
-          title: "Mood Analysis",
-          icon: "🙂",
-          content: insights.mood,
-        }),
-        React.createElement(InsightCard, {
-          title: "Suggestions",
-          icon: "💡",
-          suggestions: insights.suggestions,
-        }),
-        React.createElement(InsightCard, {
-          title: "Affirmation",
-          icon: "✨",
-          content: insights.affirmation,
-        }),
-        React.createElement(
-          "button",
-          {
-            className: "btn btn--primary btn--full-width mt-8",
-            onClick: handleDone,
-          },
-          "Done"
-        )
-      )
-    );
-  }
-  
-  function InsightCard({ title, icon, content, suggestions }) {
-    return React.createElement(
-      "div",
-      { className: "insight-card" },
-      React.createElement(
-        "div",
-        { className: "insight-header" },
-        React.createElement("span", { className: "insight-icon" }, icon),
-        React.createElement("h3", { className: "insight-title" }, title)
-      ),
-      content && React.createElement(
-        "p",
-        { className: "insight-content" },
-        content
-      ),
-      suggestions &&
-        React.createElement(
-          "ul",
-          { className: "insight-suggestions" },
-          suggestions.map((s, idx) =>
-            React.createElement("li", { key: idx }, s)
-          )
-        )
-    );
-  }
-  
-  // History list view
-  function HistoryList({ entries, onEntryClick }) {
-    if (entries.length === 0) {
-      return React.createElement(
-        "div",
-        { className: "page" },
-        React.createElement("h2", { className: "page-title" }, "No Entries Yet"),
-        React.createElement(
-          "p",
-          { className: "page-subtitle" },
-          "Start journaling to see your mood history here."
-        )
-      );
-    }
-  
-    return React.createElement(
-      "div",
-      { className: "history-entries" },
-      entries.map((e) =>
-        React.createElement(
-          "div",
-          {
-            key: e.id,
-            className: "history-entry",
-            onClick: () => onEntryClick(e),
-          },
-          React.createElement(
-            "div",
-            { className: "entry-header" },
-            React.createElement(
-              "div",
-              { className: "entry-mood" },
-              React.createElement(
-                "span",
-                { className: "entry-emoji" },
-                e.mood
-              ),
-              React.createElement(
-                "span",
-                { className: "entry-mood-name" },
-                e.moodName
-              )
-            ),
-            React.createElement(
-              "span",
-              { className: "entry-date" },
-              formatDate(e.date)
-            )
-          ),
-          React.createElement(
-            "p",
-            { className: "entry-preview" },
-            e.responses.recent || e.responses.gratitude || "(No details)"
-          )
-        )
-      )
-    );
-  }
-  
-  // Entry detail view
-  function EntryDetail({ entry, onBack }) {
-    return React.createElement(
-      "div",
-      { className: "page" },
-      React.createElement(
-        "button",
-        {
-          className: "btn btn--secondary mb-8",
-          onClick: onBack,
-        },
-        "← Back"
-      ),
-      React.createElement(
-        "h2",
-        { className: "page-title" },
-        `${entry.mood} ${entry.moodName}`
-      ),
-      React.createElement(
-        "p",
-        { className: "page-subtitle" },
-        formatDate(entry.date)
-      ),
-      React.createElement(
-        "div",
-        { className: "mt-8" },
-        React.createElement(
-          "h3",
-          { className: "settings-title" },
-          "Journal Responses"
-        ),
-        Object.entries(entry.responses).map(([k, v]) =>
-          v
-            ? React.createElement(
-                "div",
-                { key: k, className: "mb-8" },
-                React.createElement("strong", null, k.charAt(0).toUpperCase() + k.slice(1) + ": "),
-                React.createElement("p", null, v)
-              )
-            : null
-        )
-      ),
-      entry.aiInsights &&
-        React.createElement(
-          "div",
-          { className: "ai-insights mt-8" },
-          React.createElement(
-            "h3",
-            { className: "settings-title" },
-            "AI Insights"
-          ),
-          React.createElement(InsightCard, {
-            title: "Summary",
-            icon: "📝",
-            content: entry.aiInsights.summary,
-          }),
-          React.createElement(InsightCard, {
-            title: "Mood Analysis",
-            icon: "🙂",
-            content: entry.aiInsights.mood,
-          }),
-          React.createElement(InsightCard, {
-            title: "Suggestions",
-            icon: "💡",
-            suggestions: entry.aiInsights.suggestions,
-          }),
-          React.createElement(InsightCard, {
-            title: "Affirmation",
-            icon: "✨",
-            content: entry.aiInsights.affirmation,
-          })
-        )
-    );
-  }
-  
-  // Settings component
-  function Settings({ prefs, onToggle }) {
-    return React.createElement(
-      "div",
-      { className: "page" },
-      React.createElement("h2", { className: "page-title" }, "Settings"),
-      React.createElement("div", { className: "settings-section" },
-        React.createElement("h3", { className: "settings-title" }, "Preferences"),
-        React.createElement(SettingToggle, {
-          label: "Enable AI Insights",
-          description: "Receive AI-generated reflections after each entry.",
-          enabled: prefs.ai,
-          onToggle: () => onToggle("ai"),
-        }),
-        React.createElement(SettingToggle, {
-          label: "Daily Notifications",
-          description: "Get a reminder each evening to journal your mood.",
-          enabled: prefs.notify,
-          onToggle: () => onToggle("notify"),
-        })
-      ),
-      React.createElement("div", { className: "settings-section" },
-        React.createElement("h3", { className: "settings-title" }, "About"),
-        React.createElement(
-          "p",
-          { className: "setting-description" },
-          "Mood Journal is a simple, private app to help you track your emotions, practice gratitude, and reflect on your daily experiences."
-        )
-      )
-    );
-  }
-  
-  function SettingToggle({ label, description, enabled, onToggle }) {
-    return React.createElement(
-      "div",
-      { className: "setting-item" },
-      React.createElement(
-        "div",
-        null,
-        React.createElement("div", { className: "setting-label" }, label),
-        React.createElement(
-          "div",
-          { className: "setting-description" },
-          description
-        )
-      ),
-      React.createElement(
-        "div",
-        {
-          className: `toggle ${enabled ? "active" : ""}`,
-          role: "switch",
-          "aria-checked": enabled,
-          tabIndex: 0,
-          onClick: onToggle,
-          onKeyDown: (e) => {
-            if (e.key === "Enter" || e.key === " ") onToggle();
-          },
-        },
-        React.createElement("span", { className: "toggle-thumb" })
-      )
-    );
-  }
-  
-  /**************************** MAIN APP *********************************/
-  function App() {
-    /* ------------------------- SERVICES ------------------------- */
-    // Firebase services (already initialized by firebase-init.js)
-    const [authService] = useState(() => new FirebaseAuthService());
-    const [storageService] = useState(() => new FirebaseStorageService());
-    /* ------------------------- STATE ------------------------- */
-    const [currentUser, setCurrentUser] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loading, setLoading] = useState(true);
-    console.log('App loading state:', loading);
-    const [view, setView] = useState('welcome');
-    const [entries, setEntries] = useState([]);
-    const [prefs, setPrefs] = useState({ ai: true, notify: true });
-    const [selectedEntry, setSelectedEntry] = useState(null);
     
-    console.log('App initialized with currentUser:', currentUser);
-    
-    /* -------------------- SERVICE WORKER (unchanged) ------------------- */
-    useEffect(() => {
-      if ('serviceWorker' in navigator) {
-        const swCode = `
-          self.addEventListener('install', e => self.skipWaiting());
-          self.addEventListener('activate', e => self.clients.claim());
-          self.addEventListener('fetch', e => {
-            e.respondWith(
-              caches.match(e.request).then(r => r || fetch(e.request))
-            );
-          });
-        `;
-        const blob = new Blob([swCode], { type: 'application/javascript' });
-        const swUrl = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(swUrl).catch(() => {});
-      }
-    }, []);
-
-    /* -------------- AUTH OBSERVER + INITIAL DATA LOAD -------------- */
-    useEffect(() => {
-      // Subscribe to Firebase auth changes
-      const unsub = authService.onAuthStateChanged(async user => {
-        if (user) {
-          setCurrentUser(user);
-          setIsAuthenticated(true);
-          // Load user prefs & entries
-          const userPrefs = await authService.getUserPreferences(user.uid);
-          setPrefs(userPrefs);
-          const userEntries = await storageService.getUserEntries(user.uid);
-          setEntries(userEntries);
-        } else {
-          setCurrentUser(null);
-          setIsAuthenticated(false);
-          setEntries([]);
-        }
-        setLoading(false);
-      });
-      return () => unsub && unsub();
-    }, [authService, storageService]);
-
-    /* -------------------- AUTH HANDLERS -------------------- */
-    const handleAuthSuccess = async user => {
-      setCurrentUser(user);
-      setIsAuthenticated(true);
-      const userEntries = await storageService.getUserEntries(user.id);
-      setEntries(userEntries);
-      setView('welcome');
-    };
-
-    const handleLogout = async () => {
-      await authService.logout();
-      setCurrentUser(null);
-      setIsAuthenticated(false);
-      setEntries([]);
-      setView('auth');
-    };
-
-    /* -------------------- JOURNAL HANDLERS -------------------- */
-    const printCurrentUser = () => {
-      if (currentUser) {
-        console.log(`Current User: ${currentUser.displayName || 'Anonymous'}`);
-        console.log(`User ID: ${currentUser.uid}`);
+    // Handle input events for proper label animation
+    input.addEventListener('input', function() {
+      if (this.value.length > 0) {
+        this.setAttribute('data-filled', 'true');
       } else {
-        console.log('No user is currently logged in.');
+        this.removeAttribute('data-filled');
       }
-    };
-
-    printCurrentUser();
-    const startJournal = () => setView('journal');
-
-    const handleSurveySubmit = async entry => {
-      console.log('Entry object before saving:', entry);
-      console.log('MoodValue:', entry.moodValue);
-      // Save to Firestore
-      const result = await storageService.saveEntry(currentUser.uid, entry);
-      if (result.success) {
-        entry.id = result.id;
-        const newEntries = [entry, ...entries];
-        setEntries(newEntries);
-        if (prefs.ai) {
-          setSelectedEntry(entry);
-          setView('ai');
-        } else {
-          setView('history');
-        }
-      }
-    };
-
-    const handleAIComplete = async entryWithInsights => {
-      // Update entry with insights
-      await storageService.updateEntryInsights(currentUser.uid, entryWithInsights.id, entryWithInsights.aiInsights);
-      const newEntries = [entryWithInsights, ...entries.filter(e => e.id !== entryWithInsights.id)];
-      setEntries(newEntries);
-      setSelectedEntry(null);
-      setView('history');
-    };
-
-    const togglePref = key => {
-      const updated = { ...prefs, [key]: !prefs[key] };
-      setPrefs(updated);
-      authService.updateUserPreferences(updated);
-    };
-
-    const onNavigate = id => {
-      setSelectedEntry(null);
-      setView(id);
-    };
-
-    const onEntryClick = entry => {
-      setSelectedEntry(entry);
-      setView('entry-detail');
-    };
-
-    /* -------------------- RENDER LOGIC -------------------- */
-    if (loading) {
-      return React.createElement('div', { className: 'app' }, React.createElement('div', { className: 'loading' }, 'Loading...'));
-    }
-
-    if (!isAuthenticated) {
-      return React.createElement('div', { className: 'app' }, React.createElement(AuthContainer, {
-        authService: authService,
-        onAuthSuccess: handleAuthSuccess
-      }));
-    }
-
-    // Add this debug code temporarily to your app.js or statistics-dashboard.js
-    console.log('Chart.js available:', typeof window.Chart);
-    console.log('Chart object:', window.Chart);
-    console.log('Registerables:', window.Chart?.registerables);
-
+    });
     
-    let pageContent = null;
-    switch (view) {
-      case 'welcome':
-        pageContent = React.createElement(Welcome, { onStart: startJournal, onHistory: () => setView('history') });
+    input.addEventListener('focus', function() {
+      this.setAttribute('data-focused', 'true');
+    });
+    
+    input.addEventListener('blur', function() {
+      this.removeAttribute('data-focused');
+    });
+  });
+}
+
+// Loading Screen Functions
+function showLoadingScreen() {
+  loadingScreen.classList.remove('hidden');
+  rotateWellnessTips();
+}
+
+function hideLoadingScreen() {
+  loadingScreen.classList.add('hidden');
+}
+
+function rotateWellnessTips() {
+  const tipElement = document.getElementById('wellness-tip-text');
+  let currentTipIndex = 0;
+  
+  const rotateTip = () => {
+    tipElement.style.opacity = '0';
+    setTimeout(() => {
+      currentTipIndex = (currentTipIndex + 1) % wellnessTips.length;
+      tipElement.textContent = wellnessTips[currentTipIndex];
+      tipElement.style.opacity = '1';
+    }, 300);
+  };
+  
+  const interval = setInterval(rotateTip, 2000);
+  
+  // Clear interval after loading
+  setTimeout(() => {
+    clearInterval(interval);
+  }, 3000);
+}
+
+// Screen Navigation Functions
+function showAuthScreen() {
+  hideAllScreens();
+  authScreen.classList.remove('hidden');
+}
+
+function showHomeScreen() {
+  hideAllScreens();
+  homeScreen.classList.remove('hidden');
+  updateUserGreeting();
+}
+
+function showJournalScreen() {
+  hideAllScreens();
+  journalScreen.classList.remove('hidden');
+  resetJournalFlow();
+}
+
+function showHistoryScreen() {
+  hideAllScreens();
+  historyScreen.classList.remove('hidden');
+  loadInsights();
+  loadEntries();
+}
+
+function hideAllScreens() {
+  [loadingScreen, authScreen, homeScreen, journalScreen, historyScreen].forEach(screen => {
+    screen.classList.add('hidden');
+  });
+}
+
+// Authentication Functions
+function setupAuthEventListeners() {
+  // Login form - Fixed event listener
+  const loginForm = document.getElementById('login-email-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', handleEmailLogin);
+  }
+  
+  // Register form - Fixed event listener  
+  const registerForm = document.getElementById('register-email-form');
+  if (registerForm) {
+    registerForm.addEventListener('submit', handleEmailRegister);
+  }
+  
+  // Google Sign-In buttons
+  const googleSigninBtn = document.getElementById('google-signin');
+  const googleSignupBtn = document.getElementById('google-signup');
+  
+  if (googleSigninBtn) {
+    googleSigninBtn.addEventListener('click', handleGoogleSignIn);
+  }
+  if (googleSignupBtn) {
+    googleSignupBtn.addEventListener('click', handleGoogleSignIn);
+  }
+  
+  // Form switching
+  const showRegisterLink = document.getElementById('show-register');
+  const showLoginLink = document.getElementById('show-login');
+  
+  if (showRegisterLink) {
+    showRegisterLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('register-form').classList.remove('hidden');
+    });
+  }
+  
+  if (showLoginLink) {
+    showLoginLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('register-form').classList.add('hidden');
+      document.getElementById('login-form').classList.remove('hidden');
+    });
+  }
+  
+  // Logout with proper functionality
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', handleLogout);
+  }
+}
+
+async function handleEmailLogin(e) {
+  e.preventDefault();
+  console.log('Login form submitted');
+  
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  
+  console.log('Attempting login with:', email);
+  
+  if (!email || !password) {
+    alert('Please fill in all fields');
+    return;
+  }
+  
+  try {
+    const result = await auth.signInWithEmailAndPassword(email, password);
+    console.log('Login successful:', result.user);
+  } catch (error) {
+    console.error('Login error:', error);
+    
+    // Provide more user-friendly error messages
+    let errorMessage = 'Login failed: ';
+    switch (error.code) {
+      case 'auth/user-not-found':
+        errorMessage += 'No account found with this email address.';
         break;
-      case 'insights':
-        pageContent = React.createElement(StatisticsDashboard, { entries: entries });
-        break;      
-      case 'journal':
-          pageContent = React.createElement(JournalSurvey, { onSubmit: handleSurveySubmit, onCancel: () => setView('welcome') });
-          break;
-      case 'ai':
-          pageContent = React.createElement(AIInsights, { entry: selectedEntry, onDone: handleAIComplete });
-          break;  
-      case 'history':
-        pageContent = React.createElement('div', { className: 'page' }, React.createElement('h2', { className: 'page-title' }, 'History'), React.createElement(HistoryList, { entries: entries, onEntryClick: onEntryClick }));
+      case 'auth/wrong-password':
+        errorMessage += 'Incorrect password.';
         break;
-      case 'entry-detail':
-        pageContent = React.createElement(EntryDetail, { entry: selectedEntry, onBack: () => setView('history') });
+      case 'auth/invalid-email':
+        errorMessage += 'Invalid email address.';
         break;
-      case 'analytics':
-        pageContent = React.createElement(MoodAnalytics, { userId: currentUser.uid, storageService: storageService });
-        break;
-      case 'settings':
-        pageContent = React.createElement(Settings, { prefs: prefs, onToggle: togglePref });
+      case 'auth/user-disabled':
+        errorMessage += 'This account has been disabled.';
         break;
       default:
-        pageContent = React.createElement(Welcome, { onStart: startJournal, onHistory: () => setView('history') });
+        errorMessage += error.message;
     }
+    alert(errorMessage);
+  }
+}
 
-    return React.createElement('div', { className: 'app' }, React.createElement(ThemeToggle), pageContent, view !== 'welcome' && view !== 'journal' && view !== 'ai' && React.createElement(BottomNav, { current: view, onNavigate }));
+async function handleEmailRegister(e) {
+  e.preventDefault();
+  console.log('Register form submitted');
+  
+  const email = document.getElementById('register-email').value.trim();
+  const password = document.getElementById('register-password').value;
+  
+  console.log('Attempting registration with:', email);
+  
+  if (!email || !password) {
+    alert('Please fill in all fields');
+    return;
   }
   
-  /**************************** RENDER *********************************/
+  if (password.length < 6) {
+    alert('Password must be at least 6 characters long');
+    return;
+  }
   
-  // Load React from CDN
-  if (typeof React === 'undefined') {
-    const script1 = document.createElement('script');
-    script1.src = 'https://unpkg.com/react@18/umd/react.development.js';
-    script1.crossOrigin = 'anonymous';
-    document.head.appendChild(script1);
+  try {
+    const result = await auth.createUserWithEmailAndPassword(email, password);
+    console.log('Registration successful:', result.user);
+  } catch (error) {
+    console.error('Registration error:', error);
+    
+    // Provide more user-friendly error messages
+    let errorMessage = 'Registration failed: ';
+    switch (error.code) {
+      case 'auth/email-already-in-use':
+        errorMessage += 'An account with this email already exists.';
+        break;
+      case 'auth/invalid-email':
+        errorMessage += 'Invalid email address.';
+        break;
+      case 'auth/weak-password':
+        errorMessage += 'Password is too weak.';
+        break;
+      default:
+        errorMessage += error.message;
+    }
+    alert(errorMessage);
+  }
+}
+
+async function handleGoogleSignIn() {
+  console.log('Google sign-in clicked');
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    const result = await auth.signInWithPopup(provider);
+    console.log('Google sign-in successful:', result.user);
+  } catch (error) {
+    console.error('Google sign-in error:', error);
+    alert('Google sign-in failed: ' + error.message);
+  }
+}
+
+async function handleLogout() {
+  const logoutBtn = document.getElementById('logout-btn');
+  const logoutText = logoutBtn.querySelector('.logout-text');
+  const logoutLoading = logoutBtn.querySelector('.logout-loading');
   
-    const script2 = document.createElement('script');
-    script2.src = 'https://unpkg.com/react-dom@18/umd/react-dom.development.js';
-    script2.crossOrigin = 'anonymous';
-    document.head.appendChild(script2);
-  
-    script2.onload = () => {
-      const root = ReactDOM.createRoot(document.getElementById("app"));
-      root.render(React.createElement(App));
+  try {
+    // Show loading state
+    logoutText.classList.add('hidden');
+    logoutLoading.classList.remove('hidden');
+    logoutBtn.disabled = true;
+    
+    // Sign out user
+    await auth.signOut();
+    
+    // Reset UI state
+    logoutText.classList.remove('hidden');
+    logoutLoading.classList.add('hidden');
+    logoutBtn.disabled = false;
+    
+    // Clear user data
+    currentUser = null;
+    selectedEmotions = [];
+    journalData = {
+      emotions: [],
+      intensities: {
+        stress: 5,
+        energy: 5,
+        social: 5,
+        physical: 5,
+        clarity: 5
+      },
+      text: ''
     };
+    
+  } catch (error) {
+    // Reset button state on error
+    logoutText.classList.remove('hidden');
+    logoutLoading.classList.add('hidden');
+    logoutBtn.disabled = false;
+    
+    console.error('Logout error:', error);
+    alert('Logout failed: ' + error.message);
+  }
+}
+
+function updateUserGreeting() {
+  const greetingElement = document.getElementById('user-greeting');
+  if (currentUser) {
+    const name = currentUser.displayName || currentUser.email.split('@')[0];
+    const hour = new Date().getHours();
+    let greeting = 'Good evening';
+    if (hour < 12) greeting = 'Good morning';
+    else if (hour < 18) greeting = 'Good afternoon';
+    
+    greetingElement.textContent = `${greeting}, ${name}!`;
+  }
+}
+
+// Journal Functions
+function resetJournalFlow() {
+  currentStep = 1;
+  selectedEmotions = [];
+  journalData = {
+    emotions: [],
+    intensities: {
+      stress: 5,
+      energy: 5,
+      social: 5,
+      physical: 5,
+      clarity: 5
+    },
+    text: ''
+  };
+  
+  updateProgressDots();
+  showStep(1);
+  updateEmotionCount();
+  resetSliders();
+  clearJournalText();
+  setRandomPrompt();
+  
+  // Reset specific emotions circle
+  const specificWrapper = document.getElementById('specific-emotions-wrapper');
+  specificWrapper.style.transform = 'translateX(100px)';
+  specificWrapper.style.opacity = '0';
+}
+
+function showStep(step) {
+  document.querySelectorAll('.journal-step').forEach(stepEl => {
+    stepEl.classList.remove('active');
+  });
+  
+  const targetStep = document.getElementById(`${getStepId(step)}-step`);
+  if (targetStep) {
+    targetStep.classList.add('active');
+  }
+  
+  currentStep = step;
+  updateProgressDots();
+}
+
+function getStepId(step) {
+  const stepIds = ['', 'emotion', 'intensity', 'writing'];
+  return stepIds[step];
+}
+
+function updateProgressDots() {
+  document.querySelectorAll('.dot').forEach((dot, index) => {
+    if (index < currentStep) {
+      dot.classList.add('active');
+    } else {
+      dot.classList.remove('active');
+    }
+  });
+}
+
+function setupEmotionCircles() {
+  const emotionSectors = document.querySelectorAll('.emotion-sector');
+  const specificEmotionsCircle = document.getElementById('specific-emotions-circle');
+  
+  emotionSectors.forEach(sector => {
+    sector.addEventListener('click', () => {
+      const emotionGroup = sector.dataset.emotion;
+      showSpecificEmotions(emotionGroup);
+      
+      // Animate circles with enhanced transitions
+      const groupsWrapper = sector.closest('.emotion-circle-wrapper');
+      const specificWrapper = document.getElementById('specific-emotions-wrapper');
+      
+      groupsWrapper.style.transform = 'translateX(-50px) scale(0.9)';
+      groupsWrapper.style.opacity = '0.7';
+      specificWrapper.style.transform = 'translateX(0) scale(1)';
+      specificWrapper.style.opacity = '1';
+      
+      // Add glow effect to selected sector
+      sector.style.boxShadow = 'inset 0 0 30px rgba(0, 212, 255, 0.5)';
+      setTimeout(() => {
+        sector.style.boxShadow = '';
+      }, 1000);
+    });
+  });
+}
+
+function showSpecificEmotions(emotionGroup) {
+  const specificEmotionsCircle = document.getElementById('specific-emotions-circle');
+  const emotions = emotionGroups[emotionGroup];
+  
+  // Update center text
+  const centerSpan = specificEmotionsCircle.querySelector('.circle-center span');
+  centerSpan.textContent = emotionGroup.charAt(0).toUpperCase() + emotionGroup.slice(1);
+  
+  // Clear existing emotions
+  const existingEmotions = specificEmotionsCircle.querySelectorAll('.specific-emotion');
+  existingEmotions.forEach(emotion => emotion.remove());
+  
+  emotions.forEach((emotion, index) => {
+    const emotionElement = document.createElement('div');
+    emotionElement.className = 'specific-emotion';
+    emotionElement.textContent = emotion;
+    emotionElement.dataset.emotion = emotion;
+    
+    // Position emotions around the circle with better spacing
+    const angle = (index / emotions.length) * 360;
+    const radius = 130;
+    const x = Math.cos(angle * Math.PI / 180) * radius;
+    const y = Math.sin(angle * Math.PI / 180) * radius;
+    
+    emotionElement.style.left = `calc(50% + ${x}px - 50px)`;
+    emotionElement.style.top = `calc(50% + ${y}px - 20px)`;
+    
+    // Check if already selected
+    if (selectedEmotions.includes(emotion)) {
+      emotionElement.classList.add('selected');
+    }
+    
+    emotionElement.addEventListener('click', () => {
+      toggleEmotionSelection(emotion, emotionElement);
+    });
+    
+    specificEmotionsCircle.appendChild(emotionElement);
+    
+    // Animate in
+    setTimeout(() => {
+      emotionElement.style.opacity = '1';
+      emotionElement.style.transform = 'scale(1)';
+    }, index * 50);
+  });
+}
+
+function toggleEmotionSelection(emotion, element) {
+  const index = selectedEmotions.indexOf(emotion);
+  
+  if (index > -1) {
+    selectedEmotions.splice(index, 1);
+    element.classList.remove('selected');
   } else {
-    document.addEventListener("DOMContentLoaded", () => {
-      const root = ReactDOM.createRoot(document.getElementById("app"));
-      root.render(React.createElement(App));
+    selectedEmotions.push(emotion);
+    element.classList.add('selected');
+    
+    // Add selection animation
+    element.style.transform = 'scale(1.2)';
+    setTimeout(() => {
+      element.style.transform = 'scale(1)';
+    }, 200);
+  }
+  
+  updateEmotionTags();
+  updateEmotionCount();
+  updateContinueButton();
+}
+
+function updateEmotionTags() {
+  const tagsContainer = document.getElementById('emotion-tags');
+  tagsContainer.innerHTML = '';
+  
+  selectedEmotions.forEach(emotion => {
+    const tag = document.createElement('div');
+    tag.className = 'emotion-tag';
+    tag.innerHTML = `
+      ${emotion}
+      <span class="remove" data-emotion="${emotion}">×</span>
+    `;
+    
+    tag.querySelector('.remove').addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeEmotion(emotion);
+    });
+    
+    tagsContainer.appendChild(tag);
+  });
+}
+
+function removeEmotion(emotion) {
+  const index = selectedEmotions.indexOf(emotion);
+  if (index > -1) {
+    selectedEmotions.splice(index, 1);
+    updateEmotionTags();
+    updateEmotionCount();
+    updateContinueButton();
+    
+    // Update specific emotion circle
+    const specificEmotion = document.querySelector(`[data-emotion="${emotion}"]`);
+    if (specificEmotion && specificEmotion.classList.contains('specific-emotion')) {
+      specificEmotion.classList.remove('selected');
+    }
+  }
+}
+
+function updateEmotionCount() {
+  const countElement = document.getElementById('emotion-count');
+  countElement.textContent = `(${selectedEmotions.length})`;
+}
+
+function updateContinueButton() {
+  const continueBtn = document.getElementById('emotions-next');
+  continueBtn.disabled = selectedEmotions.length === 0;
+}
+
+function setupSliders() {
+  const sliders = ['stress', 'energy', 'social', 'physical', 'clarity'];
+  
+  sliders.forEach(sliderName => {
+    const slider = document.getElementById(`${sliderName}-slider`);
+    const valueDisplay = document.getElementById(`${sliderName}-value`);
+    
+    if (slider && valueDisplay) {
+      slider.addEventListener('input', (e) => {
+        const value = e.target.value;
+        valueDisplay.textContent = value;
+        journalData.intensities[sliderName] = parseInt(value);
+        
+        // Update slider color based on value
+        const percentage = (value / 10) * 100;
+        slider.style.background = `linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) ${percentage}%, var(--color-border) ${percentage}%, var(--color-border) 100%)`;
+      });
+      
+      // Initialize slider appearance
+      slider.dispatchEvent(new Event('input'));
+    }
+  });
+}
+
+function resetSliders() {
+  const sliders = ['stress', 'energy', 'social', 'physical', 'clarity'];
+  
+  sliders.forEach(sliderName => {
+    const slider = document.getElementById(`${sliderName}-slider`);
+    const valueDisplay = document.getElementById(`${sliderName}-value`);
+    
+    if (slider && valueDisplay) {
+      slider.value = 5;
+      valueDisplay.textContent = '5';
+      journalData.intensities[sliderName] = 5;
+      
+      // Reset slider appearance
+      slider.dispatchEvent(new Event('input'));
+    }
+  });
+}
+
+function setupJournalEditor() {
+  const textarea = document.getElementById('journal-text');
+  const wordCount = document.getElementById('word-count');
+  
+  if (textarea && wordCount) {
+    textarea.addEventListener('input', (e) => {
+      const text = e.target.value;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      wordCount.textContent = `${words} words`;
+      journalData.text = text;
     });
   }
+}
+
+function clearJournalText() {
+  const textarea = document.getElementById('journal-text');
+  const wordCount = document.getElementById('word-count');
   
-  })();
+  if (textarea && wordCount) {
+    textarea.value = '';
+    wordCount.textContent = '0 words';
+    journalData.text = '';
+  }
+}
+
+function setRandomPrompt() {
+  const promptElement = document.getElementById('journal-prompt');
+  if (promptElement) {
+    const randomPrompt = journalPrompts[Math.floor(Math.random() * journalPrompts.length)];
+    promptElement.querySelector('p').innerHTML = `<strong>Prompt:</strong> ${randomPrompt}`;
+  }
+}
+
+// Save Functions
+async function saveDraft() {
+  if (!currentUser) return;
   
+  try {
+    const draftData = {
+      ...journalData,
+      emotions: selectedEmotions,
+      userId: currentUser.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      isDraft: true
+    };
+    
+    await db.collection('entries').add(draftData);
+    alert('Draft saved successfully!');
+  } catch (error) {
+    console.error('Error saving draft:', error);
+    alert('Failed to save draft');
+  }
+}
+
+async function saveEntry() {
+  if (!currentUser) return;
+  
+  if (selectedEmotions.length === 0) {
+    alert('Please select at least one emotion');
+    return;
+  }
+  
+  if (!journalData.text.trim()) {
+    alert('Please write something in your journal');
+    return;
+  }
+  
+  try {
+    const entryData = {
+      ...journalData,
+      emotions: selectedEmotions,
+      userId: currentUser.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      isDraft: false,
+      sentiment: analyzeSentiment(journalData.text)
+    };
+    
+    await db.collection('entries').add(entryData);
+    showSuccessModal();
+  } catch (error) {
+    console.error('Error saving entry:', error);
+    alert('Failed to save entry');
+  }
+}
+
+function analyzeSentiment(text) {
+  // Simple sentiment analysis
+  const positiveWords = ['happy', 'joy', 'love', 'excited', 'grateful', 'peaceful', 'content', 'amazing', 'wonderful', 'great'];
+  const negativeWords = ['sad', 'angry', 'frustrated', 'worried', 'anxious', 'terrible', 'awful', 'hate', 'angry', 'depressed'];
+  
+  const words = text.toLowerCase().split(/\s+/);
+  let positiveScore = 0;
+  let negativeScore = 0;
+  
+  words.forEach(word => {
+    if (positiveWords.includes(word)) positiveScore++;
+    if (negativeWords.includes(word)) negativeScore++;
+  });
+  
+  if (positiveScore > negativeScore) return 'positive';
+  if (negativeScore > positiveScore) return 'negative';
+  return 'neutral';
+}
+
+function showSuccessModal() {
+  const modal = document.getElementById('success-modal');
+  modal.classList.remove('hidden');
+}
+
+function hideSuccessModal() {
+  const modal = document.getElementById('success-modal');
+  modal.classList.add('hidden');
+  showHomeScreen();
+}
+
+// History Functions
+async function loadInsights() {
+  if (!currentUser) return;
+  
+  try {
+    const snapshot = await db.collection('entries')
+      .where('userId', '==', currentUser.uid)
+      .where('isDraft', '==', false)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    const entries = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate()
+    }));
+    
+    updateStats(entries);
+    createEmotionChart(entries);
+    createWeeklyChart(entries);
+    createMoodCalendar(entries);
+  } catch (error) {
+    console.error('Error loading insights:', error);
+  }
+}
+
+function updateStats(entries) {
+  const totalEntries = entries.length;
+  const currentStreak = calculateStreak(entries);
+  const avgMood = calculateAverageMood(entries);
+  
+  document.getElementById('total-entries').textContent = totalEntries;
+  document.getElementById('current-streak').textContent = currentStreak;
+  document.getElementById('avg-mood').textContent = avgMood;
+}
+
+function calculateStreak(entries) {
+  if (entries.length === 0) return 0;
+  
+  const today = new Date();
+  let streak = 0;
+  let checkDate = new Date(today);
+  
+  for (let i = 0; i < entries.length; i++) {
+    const entryDate = entries[i].createdAt;
+    if (!entryDate) continue;
+    
+    const entryDay = new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate());
+    const checkDay = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
+    
+    if (entryDay.getTime() === checkDay.getTime()) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else if (entryDay.getTime() < checkDay.getTime()) {
+      break;
+    }
+  }
+  
+  return streak;
+}
+
+function calculateAverageMood(entries) {
+  if (entries.length === 0) return '-';
+  
+  const sentimentScores = { positive: 1, neutral: 0, negative: -1 };
+  const totalScore = entries.reduce((sum, entry) => {
+    return sum + (sentimentScores[entry.sentiment] || 0);
+  }, 0);
+  
+  const avgScore = totalScore / entries.length;
+  
+  if (avgScore > 0.3) return 'Positive';
+  if (avgScore < -0.3) return 'Negative';
+  return 'Neutral';
+}
+
+function createEmotionChart(entries) {
+  const ctx = document.getElementById('emotion-chart');
+  if (!ctx) return;
+  
+  const emotionCounts = {};
+  entries.forEach(entry => {
+    entry.emotions?.forEach(emotion => {
+      emotionCounts[emotion] = (emotionCounts[emotion] || 0) + 1;
+    });
+  });
+  
+  const sortedEmotions = Object.entries(emotionCounts)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 10);
+  
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: sortedEmotions.map(([emotion]) => emotion),
+      datasets: [{
+        data: sortedEmotions.map(([,count]) => count),
+        backgroundColor: [
+          '#1FB8CD', '#FFC185', '#B4413C', '#ECEBD5', '#5D878F',
+          '#DB4545', '#D2BA4C', '#964325', '#944454', '#13343B'
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#e0e0e0',
+            padding: 20
+          }
+        }
+      }
+    }
+  });
+}
+
+function createWeeklyChart(entries) {
+  const ctx = document.getElementById('weekly-chart');
+  if (!ctx) return;
+  
+  const last7Days = Array.from({length: 7}, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - i));
+    return date;
+  });
+  
+  const dailyData = last7Days.map(date => {
+    const dayEntries = entries.filter(entry => {
+      if (!entry.createdAt) return false;
+      const entryDate = entry.createdAt;
+      return entryDate.toDateString() === date.toDateString();
+    });
+    
+    const avgStress = dayEntries.length > 0 
+      ? dayEntries.reduce((sum, entry) => sum + (entry.intensities?.stress || 5), 0) / dayEntries.length
+      : 0;
+    
+    const avgEnergy = dayEntries.length > 0
+      ? dayEntries.reduce((sum, entry) => sum + (entry.intensities?.energy || 5), 0) / dayEntries.length
+      : 0;
+    
+    return { date, stress: avgStress, energy: avgEnergy };
+  });
+  
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dailyData.map(d => d.date.toLocaleDateString('en-US', { weekday: 'short' })),
+      datasets: [
+        {
+          label: 'Stress Level',
+          data: dailyData.map(d => d.stress),
+          borderColor: '#1FB8CD',
+          backgroundColor: 'rgba(31, 184, 205, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Energy Level',
+          data: dailyData.map(d => d.energy),
+          borderColor: '#FFC185',
+          backgroundColor: 'rgba(255, 193, 133, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: '#e0e0e0'
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 10,
+          ticks: {
+            color: '#a0a0a0'
+          },
+          grid: {
+            color: '#333333'
+          }
+        },
+        x: {
+          ticks: {
+            color: '#a0a0a0'
+          },
+          grid: {
+            color: '#333333'
+          }
+        }
+      }
+    }
+  });
+}
+
+function createMoodCalendar(entries) {
+  const calendar = document.getElementById('mood-calendar');
+  if (!calendar) return;
+  
+  calendar.innerHTML = '';
+  
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  const lastDay = new Date(currentYear, currentMonth + 1, 0);
+  const startDate = new Date(firstDay);
+  startDate.setDate(startDate.getDate() - firstDay.getDay());
+  
+  // Add day headers
+  const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  dayHeaders.forEach(day => {
+    const header = document.createElement('div');
+    header.className = 'calendar-header';
+    header.textContent = day;
+    header.style.fontWeight = 'bold';
+    header.style.textAlign = 'center';
+    header.style.padding = '8px';
+    header.style.color = '#a0a0a0';
+    calendar.appendChild(header);
+  });
+  
+  // Add calendar days
+  for (let i = 0; i < 42; i++) {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + i);
+    
+    const dayElement = document.createElement('div');
+    dayElement.className = 'calendar-day';
+    dayElement.textContent = date.getDate();
+    
+    if (date.getMonth() !== currentMonth) {
+      dayElement.style.opacity = '0.3';
+    }
+    
+    // Check if there are entries for this date
+    const dayEntries = entries.filter(entry => {
+      if (!entry.createdAt) return false;
+      const entryDate = entry.createdAt;
+      return entryDate.toDateString() === date.toDateString();
+    });
+    
+    if (dayEntries.length > 0) {
+      dayElement.classList.add('has-entry');
+      const avgMood = calculateDayMood(dayEntries);
+      dayElement.style.setProperty('--mood-color', getMoodColor(avgMood));
+    }
+    
+    calendar.appendChild(dayElement);
+  }
+}
+
+function calculateDayMood(entries) {
+  const sentimentScores = { positive: 1, neutral: 0, negative: -1 };
+  const totalScore = entries.reduce((sum, entry) => {
+    return sum + (sentimentScores[entry.sentiment] || 0);
+  }, 0);
+  
+  return totalScore / entries.length;
+}
+
+function getMoodColor(moodScore) {
+  if (moodScore > 0.3) return '#00ff88';  // Green for positive
+  if (moodScore < -0.3) return '#ff6b6b'; // Red for negative
+  return '#00d4ff'; // Blue for neutral
+}
+
+async function loadEntries() {
+  if (!currentUser) return;
+  
+  try {
+    const snapshot = await db.collection('entries')
+      .where('userId', '==', currentUser.uid)
+      .where('isDraft', '==', false)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    const entries = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toDate()
+    }));
+    
+    displayEntries(entries);
+  } catch (error) {
+    console.error('Error loading entries:', error);
+  }
+}
+
+function displayEntries(entries) {
+  const entriesList = document.getElementById('entries-list');
+  if (!entriesList) return;
+  
+  entriesList.innerHTML = '';
+  
+  if (entries.length === 0) {
+    entriesList.innerHTML = '<p style="text-align: center; color: #a0a0a0; padding: 40px;">No entries found. Start journaling to see your entries here!</p>';
+    return;
+  }
+  
+  entries.forEach(entry => {
+    const entryElement = document.createElement('div');
+    entryElement.className = 'entry-item';
+    
+    const formattedDate = entry.createdAt 
+      ? entry.createdAt.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      : 'Unknown date';
+    
+    const emotionsHtml = entry.emotions?.slice(0, 3).map(emotion => 
+      `<span class="entry-emotion">${emotion}</span>`
+    ).join('') || '';
+    
+    const preview = entry.text ? entry.text.substring(0, 150) + (entry.text.length > 150 ? '...' : '') : '';
+    
+    entryElement.innerHTML = `
+      <div class="entry-header">
+        <div class="entry-date">${formattedDate}</div>
+      </div>
+      <div class="entry-emotions">
+        ${emotionsHtml}
+        ${entry.emotions?.length > 3 ? `<span class="entry-emotion">+${entry.emotions.length - 3} more</span>` : ''}
+      </div>
+      <div class="entry-preview">${preview}</div>
+    `;
+    
+    entriesList.appendChild(entryElement);
+  });
+}
+
+// Event Listeners Setup
+function setupEventListeners() {
+  setupAuthEventListeners();
+  
+  // Navigation
+  const journalOption = document.getElementById('journal-option');
+  const historyOption = document.getElementById('history-option');
+  const backToHomeBtn = document.getElementById('back-to-home');
+  const backToHomeHistoryBtn = document.getElementById('back-to-home-history');
+  
+  if (journalOption) journalOption.addEventListener('click', showJournalScreen);
+  if (historyOption) historyOption.addEventListener('click', showHistoryScreen);
+  if (backToHomeBtn) backToHomeBtn.addEventListener('click', showHomeScreen);
+  if (backToHomeHistoryBtn) backToHomeHistoryBtn.addEventListener('click', showHomeScreen);
+  
+  // Journal flow
+  const emotionsNextBtn = document.getElementById('emotions-next');
+  const intensityBackBtn = document.getElementById('intensity-back');
+  const intensityNextBtn = document.getElementById('intensity-next');
+  const writingBackBtn = document.getElementById('writing-back');
+  
+  if (emotionsNextBtn) emotionsNextBtn.addEventListener('click', () => showStep(2));
+  if (intensityBackBtn) intensityBackBtn.addEventListener('click', () => showStep(1));
+  if (intensityNextBtn) intensityNextBtn.addEventListener('click', () => showStep(3));
+  if (writingBackBtn) writingBackBtn.addEventListener('click', () => showStep(2));
+  
+  // Journal actions
+  const saveDraftBtn = document.getElementById('save-draft');
+  const saveEntryBtn = document.getElementById('save-entry');
+  
+  if (saveDraftBtn) saveDraftBtn.addEventListener('click', saveDraft);
+  if (saveEntryBtn) saveEntryBtn.addEventListener('click', saveEntry);
+  
+  // Modal
+  const closeSuccessModalBtn = document.getElementById('close-success-modal');
+  if (closeSuccessModalBtn) closeSuccessModalBtn.addEventListener('click', hideSuccessModal);
+  
+  // History tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const tab = e.target.dataset.tab;
+      switchTab(tab);
+    });
+  });
+  
+  // Search and filter
+  const searchEntriesInput = document.getElementById('search-entries');
+  const filterEntriesSelect = document.getElementById('filter-entries');
+  
+  if (searchEntriesInput) searchEntriesInput.addEventListener('input', filterEntries);
+  if (filterEntriesSelect) filterEntriesSelect.addEventListener('change', filterEntries);
+  
+  // Initialize components
+  setupEmotionCircles();
+  setupSliders();
+  setupJournalEditor();
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  
+  const tabBtn = document.querySelector(`[data-tab="${tabName}"]`);
+  const tabContent = document.getElementById(`${tabName}-tab`);
+  
+  if (tabBtn) tabBtn.classList.add('active');
+  if (tabContent) tabContent.classList.add('active');
+  
+  if (tabName === 'insights') {
+    loadInsights();
+  } else if (tabName === 'entries') {
+    loadEntries();
+  }
+}
+
+function filterEntries() {
+  // This would implement search and filter functionality
+  // For now, just reload entries
+  loadEntries();
+}
