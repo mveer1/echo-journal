@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Echo Journal - Mindful Emotional Reflection</title>
+    <title>Echo Journal — Mindful Emotional Reflection</title>
+    <meta name="description" content="A warm, mindful space for emotional journaling and self-reflection. Track your emotions, discover patterns, and grow.">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Loading Screen -->
+    <!-- ═══════════════════════════════════════
+         LOADING SCREEN
+         ═══════════════════════════════════════ -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-container">
             <div class="logo">
@@ -28,27 +30,17 @@
         </div>
     </div>
 
-    <!-- Authentication Screen -->
+    <!-- ═══════════════════════════════════════
+         AUTH SCREEN
+         ═══════════════════════════════════════ -->
     <div id="auth-screen" class="auth-screen hidden">
-        <!-- Animated Background Particles -->
+        <!-- Soft ambient orbs -->
         <div class="animated-background">
             <div class="particle"></div>
             <div class="particle"></div>
             <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
         </div>
-        
+
         <div class="auth-container">
             <div class="auth-logo">
                 <div class="logo-placeholder">
@@ -57,7 +49,7 @@
                 <h1>Echo Journal</h1>
                 <p>Your mindful sanctuary for emotional reflection</p>
             </div>
-            
+
             <div class="auth-forms">
                 <!-- Login Form -->
                 <div id="login-form" class="auth-form">
@@ -73,13 +65,11 @@
                             <label for="login-password">Password</label>
                             <div class="input-border"></div>
                         </div>
-                        <button type="submit" class="btn btn--primary">Sign In</button>
+                        <button type="submit" class="btn btn--primary" style="width:100%">Sign In</button>
                     </form>
-                    <div class="auth-divider">
-                        <span>or</span>
-                    </div>
+                    <div class="auth-divider"><span>or</span></div>
                     <button id="google-signin" class="btn btn--outline google-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -104,13 +94,11 @@
                             <label for="register-password">Password (min 6 characters)</label>
                             <div class="input-border"></div>
                         </div>
-                        <button type="submit" class="btn btn--primary">Create Account</button>
+                        <button type="submit" class="btn btn--primary" style="width:100%">Create Account</button>
                     </form>
-                    <div class="auth-divider">
-                        <span>or</span>
-                    </div>
+                    <div class="auth-divider"><span>or</span></div>
                     <button id="google-signup" class="btn btn--outline google-btn">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -124,68 +112,89 @@
         </div>
     </div>
 
-    <!-- Home Screen -->
+    <!-- ═══════════════════════════════════════
+         HOME SCREEN
+         ═══════════════════════════════════════ -->
     <div id="home-screen" class="home-screen hidden">
         <div class="background-particles"></div>
         <header class="app-header">
             <div class="header-left">
-                <div class="logo-placeholder small">
-                    <div class="logo-shape"></div>
-                </div>
+                <div class="logo-placeholder small"><div class="logo-shape"></div></div>
                 <span>Echo Journal</span>
             </div>
             <div class="header-right">
                 <span id="user-greeting">Welcome back!</span>
-                <button id="logout-btn" class="btn btn--outline btn--sm">
-                    <span class="logout-text">Logout</span>
-                    <span class="logout-loading hidden">Logging out...</span>
+                <button id="theme-toggle" class="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light theme">☀️</button>
+                <button id="settings-btn" class="settings-btn" title="Settings" aria-label="Open settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
                 </button>
             </div>
         </header>
-        
+
         <main class="home-main">
             <div class="home-content">
                 <h1>Your Mindful Sanctuary</h1>
                 <p>Choose your path to emotional reflection and personal growth</p>
-                
+
+                <!-- Daily Prompt -->
+                <div class="daily-prompt-card" id="daily-prompt-card">
+                    <div class="prompt-label">💡 Today's Prompt</div>
+                    <div class="prompt-text" id="home-prompt-text">What emotions am I experiencing right now?</div>
+                </div>
+
                 <div class="home-options">
                     <div class="home-option" id="journal-option">
                         <div class="option-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                                 <polyline points="14 2 14 8 20 8"/>
                                 <line x1="16" y1="13" x2="8" y2="13"/>
                                 <line x1="16" y1="17" x2="8" y2="17"/>
-                                <polyline points="10 9 9 9 8 9"/>
                             </svg>
                         </div>
-                        <h3>Journal</h3>
+                        <h3>New Entry</h3>
                         <p>Reflect on your emotions and capture your thoughts</p>
                     </div>
-                    
+
                     <div class="home-option" id="history-option">
                         <div class="option-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M3 3v5h5"/>
-                                <path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/>
-                                <path d="M12 7v5l4 2"/>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/>
                             </svg>
                         </div>
-                        <h3>History</h3>
+                        <h3>Your Journey</h3>
                         <p>Explore your emotional patterns and past entries</p>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="quick-stats" id="home-quick-stats">
+                    <div class="quick-stat">
+                        <span class="stat-val" id="home-total-entries">—</span>
+                        <span class="stat-lbl">Entries</span>
+                    </div>
+                    <div class="quick-stat">
+                        <span class="stat-val" id="home-streak">—</span>
+                        <span class="stat-lbl">Day Streak</span>
+                    </div>
+                    <div class="quick-stat">
+                        <span class="stat-val" id="home-avg-mood">—</span>
+                        <span class="stat-lbl">Avg Mood</span>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Journal Screen -->
+    <!-- ═══════════════════════════════════════
+         JOURNAL SCREEN
+         ═══════════════════════════════════════ -->
     <div id="journal-screen" class="journal-screen hidden">
         <header class="app-header">
             <button id="back-to-home" class="btn btn--outline btn--sm">← Back</button>
-            <div class="header-center">
-                <span>Journal Entry</span>
-            </div>
+            <div class="header-center"><span>Journal Entry</span></div>
             <div class="journal-progress">
                 <div class="progress-dots">
                     <div class="dot active" data-step="1"></div>
@@ -199,56 +208,38 @@
         <div id="emotion-step" class="journal-step active">
             <div class="step-content">
                 <h2>How are you feeling?</h2>
-                <p>Select the emotion groups that resonate with you</p>
-                
+                <p>Tap an emotion group, then select specific feelings</p>
+
                 <div class="emotion-circles-container">
                     <div class="emotion-circle-wrapper">
                         <div id="emotion-groups-circle" class="emotion-circle enhanced">
-                            <div class="circle-center">
-                                <span>Emotions</span>
-                            </div>
-                            <div class="emotion-sector" data-emotion="joy">
-                                <span>Joy</span>
-                            </div>
-                            <div class="emotion-sector" data-emotion="sadness">
-                                <span>Sadness</span>
-                            </div>
-                            <div class="emotion-sector" data-emotion="anger">
-                                <span>Anger</span>
-                            </div>
-                            <div class="emotion-sector" data-emotion="fear">
-                                <span>Fear</span>
-                            </div>
-                            <div class="emotion-sector" data-emotion="love">
-                                <span>Love</span>
-                            </div>
-                            <div class="emotion-sector" data-emotion="surprise">
-                                <span>Surprise</span>
-                            </div>
-                            <div class="emotion-sector" data-emotion="disgust">
-                                <span>Disgust</span>
-                            </div>
-                            <div class="emotion-sector" data-emotion="calm">
-                                <span>Calm</span>
-                            </div>
+                            <div class="circle-center"><span>Emotions</span></div>
+                            <div class="emotion-sector" data-emotion="joy"><span>Joy</span></div>
+                            <div class="emotion-sector" data-emotion="sadness"><span>Sadness</span></div>
+                            <div class="emotion-sector" data-emotion="anger"><span>Anger</span></div>
+                            <div class="emotion-sector" data-emotion="fear"><span>Fear</span></div>
+                            <div class="emotion-sector" data-emotion="love"><span>Love</span></div>
+                            <div class="emotion-sector" data-emotion="surprise"><span>Surprise</span></div>
+                            <div class="emotion-sector" data-emotion="disgust"><span>Disgust</span></div>
+                            <div class="emotion-sector" data-emotion="calm"><span>Calm</span></div>
                         </div>
                     </div>
-                    
-                    <div class="emotion-circle-wrapper" id="specific-emotions-wrapper">
+
+                    <div class="emotion-circle-wrapper" id="specific-emotions-wrapper" style="display:none;">
                         <div id="specific-emotions-circle" class="emotion-circle enhanced">
-                            <div class="circle-center">
-                                <span>Select specific emotions</span>
-                            </div>
+                            <div class="circle-center"><span>Select specific emotions</span></div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="selected-emotions">
                     <h3>Selected Emotions <span id="emotion-count">(0)</span></h3>
                     <div id="emotion-tags" class="emotion-tags"></div>
                 </div>
-                
-                <button id="emotions-next" class="btn btn--primary" disabled>Continue</button>
+
+                <div style="text-align:center;">
+                    <button id="emotions-next" class="btn btn--primary btn--lg" disabled>Continue →</button>
+                </div>
             </div>
         </div>
 
@@ -257,7 +248,7 @@
             <div class="step-content">
                 <h2>Rate your current state</h2>
                 <p>Move the sliders to reflect how you're feeling right now</p>
-                
+
                 <div class="intensity-sliders">
                     <div class="slider-group">
                         <label>Stress Level</label>
@@ -266,7 +257,6 @@
                             <span class="slider-value" id="stress-value">5</span>
                         </div>
                     </div>
-                    
                     <div class="slider-group">
                         <label>Energy Level</label>
                         <div class="slider-container">
@@ -274,7 +264,6 @@
                             <span class="slider-value" id="energy-value">5</span>
                         </div>
                     </div>
-                    
                     <div class="slider-group">
                         <label>Social Connection</label>
                         <div class="slider-container">
@@ -282,7 +271,6 @@
                             <span class="slider-value" id="social-value">5</span>
                         </div>
                     </div>
-                    
                     <div class="slider-group">
                         <label>Physical Comfort</label>
                         <div class="slider-container">
@@ -290,7 +278,6 @@
                             <span class="slider-value" id="physical-value">5</span>
                         </div>
                     </div>
-                    
                     <div class="slider-group">
                         <label>Mental Clarity</label>
                         <div class="slider-container">
@@ -299,10 +286,10 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="step-navigation">
                     <button id="intensity-back" class="btn btn--outline">← Back</button>
-                    <button id="intensity-next" class="btn btn--primary">Continue</button>
+                    <button id="intensity-next" class="btn btn--primary">Continue →</button>
                 </div>
             </div>
         </div>
@@ -312,11 +299,11 @@
             <div class="step-content">
                 <h2>Express yourself</h2>
                 <p>Let your thoughts flow freely in this safe space</p>
-                
+
                 <div class="journal-prompt" id="journal-prompt">
-                    <p><strong>Prompt:</strong> What emotions am I experiencing right now, and what might have triggered them?</p>
+                    <p><strong>💡 Prompt:</strong> What emotions am I experiencing right now, and what might have triggered them?</p>
                 </div>
-                
+
                 <div class="journal-editor">
                     <textarea id="journal-text" placeholder="Start writing your thoughts here..."></textarea>
                     <div class="editor-footer">
@@ -324,22 +311,23 @@
                         <button id="save-draft" class="btn btn--outline btn--sm">Save Draft</button>
                     </div>
                 </div>
-                
+
                 <div class="step-navigation">
                     <button id="writing-back" class="btn btn--outline">← Back</button>
-                    <button id="save-entry" class="btn btn--primary">Save Entry</button>
+                    <button id="save-entry" class="btn btn--primary">Save Entry ✓</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- History Screen -->
+    <!-- ═══════════════════════════════════════
+         HISTORY SCREEN
+         ═══════════════════════════════════════ -->
     <div id="history-screen" class="history-screen hidden">
         <header class="app-header">
             <button id="back-to-home-history" class="btn btn--outline btn--sm">← Back</button>
-            <div class="header-center">
-                <span>Your Journey</span>
-            </div>
+            <div class="header-center"><span>Your Journey</span></div>
+            <div></div>
         </header>
 
         <div class="history-tabs">
@@ -350,27 +338,6 @@
         <!-- Insights Tab -->
         <div id="insights-tab" class="tab-content active">
             <div class="insights-grid">
-                <div class="insight-card">
-                    <h3>Emotional Overview</h3>
-                    <div class="chart-container" style="position: relative; height: 300px;">
-                        <canvas id="emotion-chart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="insight-card">
-                    <h3>Weekly Patterns</h3>
-                    <div class="chart-container" style="position: relative; height: 300px;">
-                        <canvas id="weekly-chart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="insight-card calendar-card">
-                    <h3>Mood Calendar</h3>
-                    <div id="mood-calendar" class="mood-calendar">
-                        <!-- Calendar will be generated by JavaScript -->
-                    </div>
-                </div>
-                
                 <div class="insight-card stats-card">
                     <h3>Quick Stats</h3>
                     <div class="stats-grid">
@@ -383,10 +350,29 @@
                             <span class="stat-label">Current Streak</span>
                         </div>
                         <div class="stat">
-                            <span class="stat-value" id="avg-mood">-</span>
+                            <span class="stat-value" id="avg-mood">—</span>
                             <span class="stat-label">Avg Mood</span>
                         </div>
                     </div>
+                </div>
+
+                <div class="insight-card">
+                    <h3>Emotional Overview</h3>
+                    <div class="chart-container">
+                        <canvas id="emotion-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="insight-card">
+                    <h3>Weekly Patterns</h3>
+                    <div class="chart-container">
+                        <canvas id="weekly-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="insight-card calendar-card">
+                    <h3>Mood Calendar</h3>
+                    <div id="mood-calendar" class="mood-calendar"></div>
                 </div>
             </div>
         </div>
@@ -397,28 +383,80 @@
                 <div class="search-bar">
                     <input type="text" id="search-entries" placeholder="Search your entries...">
                 </div>
-                <select id="filter-entries" class="form-control">
+                <select id="filter-entries" class="form-control" style="width:auto;min-width:140px;">
                     <option value="all">All Entries</option>
                     <option value="week">This Week</option>
                     <option value="month">This Month</option>
                     <option value="year">This Year</option>
                 </select>
             </div>
-            
-            <div id="entries-list" class="entries-list">
-                <!-- Entries will be populated by JavaScript -->
+            <div id="entries-list" class="entries-list"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         SETTINGS SCREEN (NEW)
+         ═══════════════════════════════════════ -->
+    <div id="settings-screen" class="settings-screen hidden">
+        <header class="app-header">
+            <button id="back-to-home-settings" class="btn btn--outline btn--sm">← Back</button>
+            <div class="header-center"><span>Settings</span></div>
+            <div></div>
+        </header>
+
+        <div class="settings-content">
+            <div class="settings-section">
+                <h3>👤 Profile</h3>
+                <div class="settings-row">
+                    <label>Logged in as</label>
+                    <span class="settings-value" id="settings-email">—</span>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>🎨 Appearance</h3>
+                <div class="settings-row">
+                    <label>Dark Mode</label>
+                    <button class="toggle-switch" id="settings-theme-toggle" aria-label="Toggle dark mode"></button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>📝 Journal</h3>
+                <div class="settings-row">
+                    <label>Show daily prompt</label>
+                    <button class="toggle-switch active" id="settings-prompt-toggle" aria-label="Toggle daily prompt"></button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>ℹ️ About</h3>
+                <div class="settings-row">
+                    <label>Echo Journal</label>
+                    <span class="settings-value">v1.0</span>
+                </div>
+            </div>
+
+            <div class="settings-logout">
+                <button id="logout-btn" class="btn btn--outline" style="width:100%;color:var(--error);border-color:var(--error);">
+                    <span class="logout-text">Log Out</span>
+                    <span class="logout-loading hidden">Logging out...</span>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Success Modal -->
+    <!-- ═══════════════════════════════════════
+         SUCCESS MODAL
+         ═══════════════════════════════════════ -->
     <div id="success-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
+                <span class="modal-icon">✨</span>
                 <h3>Entry Saved!</h3>
             </div>
             <div class="modal-body">
-                <p>Your journal entry has been saved successfully. Thank you for taking time to reflect on your emotions.</p>
+                <p>Your journal entry has been saved. Thank you for taking time to reflect on your emotions.</p>
             </div>
             <div class="modal-footer">
                 <button id="close-success-modal" class="btn btn--primary">Continue</button>
@@ -430,11 +468,11 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
-    <!-- Chart.js for visualizations -->
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- Main Application Script -->
+
+    <!-- App Script -->
     <script src="app.js"></script>
 </body>
 </html>
